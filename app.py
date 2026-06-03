@@ -901,3 +901,30 @@ def fix_users_table():
         return f"{msg}<br>Columns: {cols2}<br>Total users: {count}"
     except Exception as e:
         return f"ERROR: {e}"
+
+@app.route("/admin/setup-db")
+def setup_db():
+    import sqlite3, hashlib
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        avatar_color TEXT DEFAULT "#1D9E75",
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS user_watchlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, symbol))''')
+    pw = hashlib.sha256("demo123".encode()).hexdigest()
+    try:
+        conn.execute("INSERT INTO users (username,email,password_hash,avatar_color) VALUES (?,?,?,?)",
+                     ("demo","demo@tradeai.com",pw,"#1D9E75"))
+    except: pass
+    conn.commit()
+    count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    conn.close()
+    return f"DB setup complete! Total users: {count}"
