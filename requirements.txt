@@ -2,7 +2,7 @@ flask==3.0.3
 flask-cors==4.0.1
 numpy==1.26.4
 pandas==2.2.2
-yfinance==1.0.31
+yfinance==1.4.1
 mplfinance==0.12.10b0
 pillow==10.4.0
 tensorflow-cpu==2.15.0
