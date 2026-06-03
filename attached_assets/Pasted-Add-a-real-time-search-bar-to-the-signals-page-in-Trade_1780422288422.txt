@@ -1,0 +1,40 @@
+Add a real-time search bar to the /signals page in TradeAI.
+
+In /home/runner/workspace/artifacts/tradeai/templates/signals.html, add the following:
+
+1. SEARCH BAR at the top of the signals page (below the page title, above the filter buttons):
+   - Full width search input with placeholder: "Search stocks... (e.g. RELIANCE, TCS, HDFC)"
+   - Search icon (Bootstrap Icons: bi-search) inside the input on the left
+   - Clear/X button inside input on the right to reset search
+   - Dark styled input matching the site theme (background #1a1a2e, border #00d4ff on focus)
+   - Real-time filtering as user types (no page reload, pure JavaScript)
+
+2. FILTER BUTTONS row below search bar:
+   - "All" | "BUY" | "SELL" | "HOLD" | "Strong" | "NIFTY 50" | "NIFTY Bank" | "NIFTY IT"
+   - Active filter highlighted in blue
+   - Filters work TOGETHER with search (e.g. search "HDFC" + filter "BUY" shows only HDFC stocks with BUY signal)
+
+3. RESULTS COUNT shown dynamically:
+   - "Showing 23 of 77 stocks" — updates as user types or filters
+   - If no results: show "No stocks found matching '<query>'" with a clear search button
+
+4. SORT OPTIONS dropdown (top right of signals section):
+   - Sort by: "Signal Strength" | "Confidence %" | "A-Z" | "BUY first" | "SELL first"
+   - Default: sort by Signal Strength descending
+
+5. JavaScript logic (add inside <script> tag at bottom of signals.html):
+   - On page load, collect all signal cards into a JS array
+   - Each card should have data attributes: data-symbol, data-signal, data-strength, data-confidence, data-index (NIFTY50/BANKNIFTY etc)
+   - Search filters by data-symbol (case insensitive, partial match)
+   - Signal filter buttons filter by data-signal
+   - Combined filtering: both search AND signal filter apply simultaneously
+   - Smooth show/hide with CSS transition (opacity + transform)
+   - Debounce search input by 200ms for performance
+
+6. In app.py, make sure the /signals route passes these data attributes to each signal card in the template:
+   - symbol, signal (BUY/SELL/HOLD), strength (Weak/Moderate/Strong/Very Strong), confidence score
+   - Also pass which index each stock belongs to (nifty50, banknifty, nifty_it etc) so filter buttons work
+
+7. Also add a sticky position to the search+filter bar so it stays visible when scrolling through many stocks.
+
+After changes restart the app and confirm search works on /signals page.

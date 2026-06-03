@@ -1,0 +1,106 @@
+Completely rebuild TradeAI as a professional trading signal platform. This is the full specification:
+
+=== PAGES NEEDED ===
+
+1. Main Dashboard (route: "/")
+2. Stock Detail Page (route: "/stock/")  
+3. Signals Page (route: "/signals")
+
+=== PAGE 1: MAIN DASHBOARD ===
+
+SECTION A - Top ticker bar:
+- Scrolling marquee bar at the very top (below navbar)
+- Shows live price + % change for: NIFTY50, BANKNIFTY, RELIANCE, TCS, INFOSYS, HDFC BANK, ICICI BANK, WIPRO, SBI, BHARTI AIRTEL
+- Green text if price up, red if down
+- Auto-updates every 30 seconds
+
+SECTION B - Stats bar (4 metric cards):
+- Total signals today
+- BUY signals (green number)  
+- SELL signals (red number)
+- Avg confidence % (blue number)
+
+SECTION C - Active signal cards (grid, 3 per row):
+- Each card shows: Stock symbol (large), BUY/SELL/HOLD badge (green/red/yellow), Pattern detected (e.g. "Hammer", "Doji", "Engulfing"), Entry price, Target price, Stop Loss, Confidence % as a progress bar, Time of signal
+- Cards auto-refresh every 60 seconds
+- Clicking a card goes to /stock/
+
+SECTION D - Watchlist table:
+- Columns: Symbol, LTP (Last Traded Price), Change%, Volume, Signal, Pattern, Confidence, Action
+- Action button: "View Chart" → links to /stock/
+- Rows color-coded: green tint for BUY, red tint for SELL, neutral for HOLD
+- Covers all stocks including: NIFTY50, BANKNIFTY, RELIANCE, TCS, INFOSYS, HDFCBANK, ICICIBANK, WIPRO, SBIN, BHARTIARTL, KOTAKBANK, AXISBANK, LT, MARUTI, TATAMOTORS, BAJFINANCE, TITAN, SUNPHARMA, NESTLEIND, ULTRACEMCO, ONGC, POWERGRID, NTPC, TECHM, HINDALCO
+
+SECTION E - Signal history table:
+- Columns: Time, Symbol, Timeframe, Signal, Entry, Target, SL, Pattern, Confidence, Status (Active/Hit Target/Hit SL)
+- Shows last 50 signals
+- Color coded rows
+
+=== PAGE 2: STOCK DETAIL (/stock/) ===
+
+- Large candlestick chart (full width, 400px height) using lightweight-charts or Chart.js
+- Timeframe switcher buttons: 1m | 5m | 1h | 1d (active button highlighted)
+- Current AI signal box: big BUY/SELL/HOLD badge, entry/target/SL, confidence bar, pattern name
+- Pattern info card: pattern name, what it means (1-2 sentences), historical accuracy %
+- Signal history table for this specific stock (last 20 signals)
+- Back button to dashboard
+
+=== PAGE 3: SIGNALS PAGE (/signals) ===
+
+- Filter bar: All | BUY only | SELL only | High confidence (>75%) | By timeframe dropdown
+- Grid of all active signals across all stocks
+- Accuracy stats section: Overall accuracy %, Best pattern, Most reliable stock
+
+=== BACKEND (app.py) ===
+
+STOCKS to cover:
+symbols = {
+  "NIFTY50": "^NSEI", "BANKNIFTY": "^NSEBANK",
+  "RELIANCE": "RELIANCE.NS", "TCS": "TCS.NS",
+  "INFOSYS": "INFY.NS", "HDFCBANK": "HDFCBANK.NS",
+  "ICICIBANK": "ICICIBANK.NS", "WIPRO": "WIPRO.NS",
+  "SBIN": "SBIN.NS", "BHARTIARTL": "BHARTIARTL.NS",
+  "KOTAKBANK": "KOTAKBANK.NS", "AXISBANK": "AXISBANK.NS",
+  "LT": "LT.NS", "MARUTI": "MARUTI.NS",
+  "TATAMOTORS": "TATAMOTORS.NS", "BAJFINANCE": "BAJFINANCE.NS",
+  "TITAN": "TITAN.NS", "SUNPHARMA": "SUNPHARMA.NS",
+  "NESTLEIND": "NESTLEIND.NS", "TECHM": "TECHM.NS"
+}
+
+API ROUTES:
+- GET /api/signals → returns all current signals as JSON
+- GET /api/watchlist → returns all stocks with LTP, change, volume, signal
+- GET /api/history → returns last 50 signals from SQLite DB
+- GET /api/stock/ → returns data + signal for one stock
+- GET /api/chart// → returns OHLCV data for charting
+
+SIGNAL GENERATION (mock for now, CNN later):
+- For each stock, generate a realistic mock signal
+- Randomly assign BUY/SELL/HOLD with weighted probability (40% BUY, 30% SELL, 30% HOLD)
+- Pattern names: randomly pick from ["Hammer", "Doji", "Bullish Engulfing", "Bearish Engulfing", "Morning Star", "Evening Star", "Shooting Star", "Three White Soldiers", "Dark Cloud Cover", "Piercing Line"]
+- Entry = realistic mock price for each stock
+- Target = entry * (1.008 for BUY, 0.992 for SELL)
+- SL = entry * (0.996 for BUY, 1.004 for SELL)
+- Confidence = random between 58-94%
+- Cache signals for 60 seconds
+
+SQLite DB:
+- Save every generated signal to signals table
+- Table: id, symbol, timeframe, signal_type, entry, target, sl, pattern, confidence, timestamp, status
+
+=== DESIGN ===
+
+- Dark theme throughout (#0d1117 background, #161b22 cards)
+- Green: #00d964 for BUY, Red: #ff4757 for SELL, Yellow: #ffa502 for HOLD
+- Professional trading platform look (like Zerodha Kite or TradingView)
+- Responsive — works on mobile too
+- Navbar: TradeAI logo (chart icon), links to Dashboard/Signals, live green pulsing dot + "LIVE" text, last updated time
+
+=== IMPORTANT ===
+- Use Bootstrap 5 from CDN
+- Use Chart.js from CDN for charts
+- All JavaScript inline in HTML files
+- Use Flask with flask-cors
+- Store API data in SQLite using Python sqlite3 module
+- Make sure all routes work and return proper JSON
+- Auto-refresh dashboard every 60 seconds without page reload

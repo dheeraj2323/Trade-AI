@@ -1,0 +1,166 @@
+Fix these 3 remaining issues in /home/runner/workspace/artifacts/tradeai/app.py by running this python3 script in the shell:
+
+cd /home/runner/workspace/artifacts/tradeai && python3 << 'EOF'
+import re
+
+path = "app.py"
+with open(path, "r") as f:
+    code = f.read()
+
+changes = []
+
+# FIX A: now_ist() helper
+ist_block = (
+    "\n# -- IST timezone --\n"
+    "from datetime import timezone as _tz, timedelta as _td\n"
+    "IST = _tz(_td(hours=5, minutes=30))\n"
+    "def now_ist():\n"
+    "    from datetime import datetime\n"
+    "    return datetime.now(IST)\n"
+)
+if "def now_ist" not in code:
+    imports = list(re.finditer(r'^(import |from )\S', code, re.MULTILINE))
+    pos = code.index('\n', imports[-1].start()) + 1
+    code = code[:pos] + ist_block + code[pos:]
+    changes.append("now_ist() added")
+
+# FIX B: get_pattern_name() helper
+pattern_block = (
+    "\n# -- CNN pattern mapper --\n"
+    "import hashlib as _hs\n"
+    "CNN_PATTERN_NAMES = {\n"
+    '    "BUY":  ["Hammer","Bullish Engulfing","Morning Star","Piercing Line","Bullish Harami","Three White Soldiers","Dragonfly Doji"],\n'
+    '    "SELL": ["Shooting Star","Bearish Engulfing","Evening Star","Dark Cloud Cover","Bearish Harami","Three Black Crows","Gravestone Doji"],\n'
+    '    "HOLD": ["Doji","Spinning Top","Inside Bar","Neutral Harami","Marubozu"]\n'
+    "}\n"
+    "def get_pattern_name(signal='HOLD', symbol='', timeframe='1D'):\n"
+    "    names = CNN_PATTERN_NAMES.get(str(signal).upper(), ['Unknown Pattern'])\n"
+    "    idx = int(_hs.md5(f'{symbol}_{timeframe}'.encode()).hexdigest(), 16) % len(names)\n"
+    "    return 'CNN: ' + names[idx]\n"
+)
+if "def get_pattern_name" not in code:
+    imports = list(re.finditer(r'^(import |from )\S', code, re.MULTILINE))
+    pos = code.index('\n', imports[-1].start()) + 1
+    code = code[:pos] + pattern_block + code[pos:]
+    changes.append("get_pattern_name() added")
+
+# FIX C: logout + user_watchlist table + watchlist add/remove routes
+extra_routes = '''
+
+# -- logout route --
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+# -- user_watchlist DB table init --
+def _init_watchlist_table():
+    import sqlite3 as _sq3
+    conn = _sq3.connect(DB_PATH)
+    conn.execute("""CREATE TABLE IF NOT EXISTS user_watchlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, symbol))""")
+    conn.commit()
+    conn.close()
+_init_watchlist_table()
+
+@app.route("/watchlist/add", methods=["POST"])
+def watchlist_add():
+    import sqlite3 as _sq3
+    uid = session.get("user_id", "guest")
+    symbol = (request.json or {}).get("symbol", "").upper()
+    if symbol in STOCKS:
+        conn = _sq3.connect(DB_PATH)
+        conn.execute("INSERT OR IGNORE INTO user_watchlist (user_id, symbol) VALUES (?,?)", (uid, symbol))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "added", "symbol": symbol})
+    return jsonify({"status": "error", "msg": "Unknown symbol"}), 400
+
+@app.route("/watchlist/remove", methods=["POST"])
+def watchlist_remove():
+    import sqlite3 as _sq3
+    uid = session.get("user_id", "guest")
+    symbol = (request.json or {}).get("symbol", "").upper()
+    conn = _sq3.connect(DB_PATH)
+    conn.execute("DELETE FROM user_watchlist WHERE user_id=? AND symbol=?", (uid, symbol))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "removed"})
+'''
+
+if "def logout" not in code:
+    main_block = re.search(r'\nif __name__\s*==\s*[\'"]__main__[\'"]', code)
+    if main_block:
+        code = code[:main_block.start()] + extra_routes + code[main_block.start():]
+    else:
+        code += extra_routes
+    changes.append("logout + watchlist_add + watchlist_remove + user_watchlist table added")
+
+# FIX D: Update /watchlist route to use personal watchlist per user
+watchlist_route_new = """@app.route('/watchlist')
+def watchlist():
+    import sqlite3 as _sq3
+    uid = session.get('user_id', 'guest')
+    conn = _sq3.connect(DB_PATH)
+    conn.execute('''CREATE TABLE IF NOT EXISTS user_watchlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL, symbol TEXT NOT NULL,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, symbol))''')
+    rows = conn.execute("SELECT symbol FROM user_watchlist WHERE user_id=?", (uid,)).fetchall()
+    conn.close()
+    user_stocks = [r[0] for r in rows] if rows else list(STOCKS.keys())[:10]
+    return render_template('watchlist.html', watchlist=user_stocks, all_stocks=list(STOCKS.keys()))"""
+
+old = re.search(r"@app\.route\(['\"]\/watchlist['\"]\)\s*\ndef watchlist\(\):.*?return render_template\(['\"]watchlist\.html['\"][^\)]*\)", code, re.DOTALL)
+if old:
+    code = code[:old.start()] + watchlist_route_new + code[old.end():]
+    changes.append("/watchlist route updated to personal watchlist")
+
+# Write file
+import ast
+with open(path, "w") as f:
+    f.write(code)
+
+# Syntax check
+try:
+    ast.parse(code)
+    print("SYNTAX: OK")
+except SyntaxError as e:
+    print(f"SYNTAX ERROR line {e.lineno}: {e.msg}")
+
+print("\nChanges applied:")
+for c in changes:
+    print(f"  + {c}")
+EOF
+
+# FIX E: Fix View All button in index.html → /signals
+sed -i 's|href="/watchlist"|href="/signals"|g' /home/runner/workspace/artifacts/tradeai/templates/index.html
+echo "index.html View All fix: $(grep -c '/signals' /home/runner/workspace/artifacts/tradeai/templates/index.html) occurrence(s) replaced"
+
+# Final verification
+python3 -c "
+import re
+with open('/home/runner/workspace/artifacts/tradeai/app.py') as f:
+    src = f.read()
+checks = {
+    'now_ist()':           'def now_ist' in src,
+    'get_pattern_name()':  'def get_pattern_name' in src,
+    'logout route':        'def logout' in src,
+    'user_watchlist table':'user_watchlist' in src,
+    'watchlist_add route': 'def watchlist_add' in src,
+    'watchlist_remove':    'def watchlist_remove' in src,
+    'Total stocks':        str(len(re.findall(r'vol_base', src))) + ' stocks',
+}
+print()
+print('=== FINAL STATUS ===')
+for k,v in checks.items():
+    if isinstance(v, bool):
+        print(f'  {\"YES\" if v else \"NO \"}  {k}')
+    else:
+        print(f'       {k}: {v}')
+"

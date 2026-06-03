@@ -1,0 +1,53 @@
+Redesign the TradeAI platform with this exact structure:
+
+=== NAVBAR ===
+TradeAI logo | Dashboard | Watchlist | Signals | History | (live green dot + LIVE)
+
+=== PAGE 1: DASHBOARD (/) ===
+Only show TOP 6 stocks by highest confidence score.
+Layout:
+- Live scrolling ticker bar at top (all stocks)
+- Stats row: Total Signals | BUY | SELL | Avg Confidence
+- Section title: "Top Signals" with a "View All →" button linking to /watchlist
+- 6 signal cards in 2 rows of 3
+- Each card: symbol, BUY/SELL/HOLD badge, pattern name, entry/target/SL, confidence bar, mini candlestick chart image fetched from /data/chart/<symbol>/5m
+
+=== PAGE 2: WATCHLIST (/watchlist) ===
+Full table of ALL stocks with columns:
+Symbol | LTP | Change% | Volume | Signal | Pattern | Confidence | Timeframe | Action (View Chart button)
+- Filter buttons at top: All | BUY | SELL | HOLD | High Confidence
+- Clicking "View Chart" goes to /stock/<symbol>
+
+=== PAGE 3: STOCK DETAIL (/stock/<symbol>) ===
+This must look exactly like Zerodha Kite or Groww chart page:
+- Full width professional candlestick chart, height 450px
+- Use lightweight-charts library from: https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js
+- Timeframe buttons: 1m | 5m | 15m | 1h | 1d (clicking switches chart data)
+- Chart has: dark background #131722, green candles (#26a69a), red candles (#ef5350), volume bars at bottom, crosshair, price scale on right, time scale at bottom
+- Below chart: AI Signal box showing current BUY/SELL/HOLD, entry/target/SL, confidence, pattern detected
+- Pattern explanation card: what this pattern means + what action to take
+
+=== PAGE 4: SIGNALS (/signals) ===
+All active signals across all stocks:
+- Filter bar: All | BUY Only | SELL Only | High Confidence (>75%) | Timeframe dropdown (1m/5m/1h/1d)
+- Signal cards grid (same card design as dashboard)
+- Accuracy stats at bottom: overall accuracy, best pattern, most reliable stock
+
+=== PAGE 5: HISTORY (/history) ===
+Dedicated history page:
+- Full table: Time | Symbol | Timeframe | Signal | Entry | Target | SL | Pattern | Confidence | Status
+- Status: Active (blue) | Hit Target (green) | Hit SL (red)
+- Filter by: Symbol dropdown | Signal type | Date range
+- Accuracy summary cards at top: Total | Correct | Wrong | Accuracy %
+
+=== BACKEND CHANGES ===
+- Add route /data/chart/<symbol>/<timeframe> returning OHLCV JSON for lightweight-charts
+- OHLCV format: [{"time": 1234567890, "open": 100, "high": 105, "low": 98, "close": 103, "volume": 50000}]
+- Keep all existing /data/ routes
+- Make sure lightweight-charts gets proper timestamp format (Unix seconds)
+
+=== DESIGN ===
+- Keep existing dark theme (#0d1117 background)
+- Navbar links updated to: Dashboard | Watchlist | Signals | History
+- All pages mobile responsive
+- Professional look matching Zerodha Kite exactly for charts

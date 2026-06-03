@@ -1,0 +1,140 @@
+Add these features to TradeAI. This is the final update — make everything production ready:
+
+=== FEATURE 1: PAPER TRADING / VIRTUAL PORTFOLIO ===
+
+New page: /portfolio
+
+Virtual starting balance: ₹1,00,000
+
+On every signal card and stock detail page, add a "Paper Trade" button.
+Clicking it opens a modal with:
+- Stock symbol and current signal (BUY/SELL)
+- Quantity input (default: auto-calculated based on ₹10,000 per trade)
+- Entry price (pre-filled)
+- Target price (pre-filled)
+- Stop Loss (pre-filled)
+- "Confirm Trade" button
+
+Backend - paper trades table in SQLite:
+CREATE TABLE paper_trades (
+  id INTEGER PRIMARY KEY,
+  symbol TEXT,
+  signal_type TEXT,
+  entry_price REAL,
+  target_price REAL,
+  sl_price REAL,
+  quantity INTEGER,
+  invested_amount REAL,
+  pattern TEXT,
+  timeframe TEXT,
+  confidence REAL,
+  status TEXT DEFAULT 'Active',
+  pnl REAL DEFAULT 0,
+  entry_time TEXT,
+  exit_time TEXT,
+  exit_price REAL
+)
+
+Auto-update trade status every 60 seconds:
+- Fetch current price for each active trade
+- If current price >= target: status = "Target Hit", pnl = positive
+- If current price <= stoploss: status = "SL Hit", pnl = negative
+- Calculate pnl = (exit_price - entry_price) * quantity for BUY
+- Calculate pnl = (entry_price - exit_price) * quantity for SELL
+
+Portfolio page (/portfolio) layout:
+- Top stats row:
+  Virtual Balance: ₹1,00,000
+  Invested: ₹X
+  Current Value: ₹X
+  Total P&L: ₹X (green if positive, red if negative)
+  Win Rate: X% (target hit / total closed trades)
+  
+- Active Trades table:
+  Symbol | Signal | Entry | Current | Target | SL | Qty | Invested | P&L | Status | Action(Exit)
+  
+- Closed Trades table:
+  Symbol | Signal | Entry | Exit | P&L | Pattern | Result | Date
+
+- Performance chart: simple line chart showing portfolio value over time using Chart.js
+
+API routes needed:
+- POST /api/paper-trade → place a new paper trade
+- GET /api/portfolio → return all trades + stats
+- POST /api/paper-trade/<id>/exit → manually exit a trade
+- GET /api/portfolio/performance → return portfolio value history
+
+=== FEATURE 2: CNN IMAGE PROCESSING PLACEHOLDER ===
+
+Add a visible section on Stock Detail page called "CNN Analysis":
+- Show the candlestick chart rendered as an image (screenshot of last 20 candles)
+- Label: "CNN Pattern Recognition — Analysing chart image..."
+- Show which pattern was detected with confidence score
+- Add a note: "Model: MobileNetV2 trained on 10,000+ candlestick chart images"
+- This makes the CNN feature visible even before real model is connected
+
+=== FEATURE 3: SIGNAL STRENGTH INDICATOR ===
+
+On every signal card add a "Signal Strength" meter:
+- Weak (1-2 timeframes agree): grey bar
+- Moderate (3 timeframes agree): yellow bar  
+- Strong (4-5 timeframes agree): green bar
+- Very Strong (all 6 agree): bright green bar with animation
+
+=== FEATURE 4: MARKET STATUS ===
+
+Add to navbar area:
+- NSE Market Hours: 9:15 AM - 3:30 PM IST
+- If current IST time is within market hours: show "Market Open" in green
+- If outside hours: show "Market Closed" in red + next open time
+- Pre-market (9:00-9:15): show "Pre-Market" in yellow
+
+=== FEATURE 5: DISCLAIMER PAGE ===
+
+Add /about page linked in footer:
+- Project title: "TradeAI — CNN-Based Candlestick Pattern Recognition"
+- Description of how CNN image processing works
+- Tech stack: Python, Flask, TensorFlow, MobileNetV2, SQLite, Chart.js
+- SEBI Disclaimer (large, prominent):
+  "IMPORTANT DISCLAIMER: TradeAI is an academic research project developed 
+  for educational purposes only. All signals generated are AI predictions 
+  based on technical pattern analysis and do NOT constitute financial advice. 
+  TradeAI is NOT a SEBI registered investment advisor. Do not make real 
+  investment decisions based on these signals. Always consult a SEBI 
+  registered financial advisor before investing. Past performance of 
+  AI signals does not guarantee future results."
+- Academic credit: CSE Project, 2026
+
+=== FEATURE 6: FOOTER ===
+
+Add footer to all pages:
+- Left: TradeAI logo + "CNN-Based Stock Signal Platform"
+- Center: Links — Dashboard | Watchlist | Signals | History | Portfolio | About
+- Right: "For Educational Use Only | Not SEBI Registered"
+- Bottom bar: disclaimer text in small font
+
+=== BACKEND FINAL CLEANUP ===
+
+1. Make sure all API routes return proper JSON with error handling
+2. Add try/except to every route — if data fetch fails, return mock data
+3. Cache all signals for 60 seconds to avoid repeated computation
+4. Make sure SQLite database initialises automatically on first run
+5. Add logging: print timestamp + route + response time for every API call
+6. Make sure app runs on host="0.0.0.0" port=5000
+
+=== DESIGN FINAL POLISH ===
+
+1. Add loading spinner on every page while data fetches
+2. Add "Last updated: X seconds ago" counter on dashboard
+3. Toast notifications when new signal is generated (top right corner)
+4. Smooth fade-in animation for signal cards
+5. Mobile responsive — test all pages work on 375px width
+6. Add favicon: chart icon
+7. Page titles: "TradeAI - Dashboard", "TradeAI - Watchlist" etc.
+
+=== IMPORTANT ===
+- Do not break any existing features
+- Keep all existing routes working
+- Keep dark theme throughout
+- Paper trading uses virtual money only — no real transactions
+- Make sure Portfolio page is linked in navbar

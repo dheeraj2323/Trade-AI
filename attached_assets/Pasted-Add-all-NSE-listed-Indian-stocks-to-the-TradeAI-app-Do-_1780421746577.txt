@@ -1,0 +1,64 @@
+Add all NSE-listed Indian stocks to the TradeAI app. Do the following:
+
+1. In app.py, replace the current hardcoded STOCKS dict with a dynamic loader that fetches all NSE stocks automatically:
+
+import pandas as pd
+
+def load_nse_stocks():
+    try:
+        # Fetch NSE equity list from NSE official CSV
+        url = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
+        df = pd.read_csv(url)
+        stocks = {}
+        for _, row in df.iterrows():
+            symbol = str(row['SYMBOL']).strip()
+            stocks[symbol] = {
+                "base": 100,
+                "vol_base": 1000000,
+                "name": str(row['NAME OF COMPANY']).strip()
+            }
+        return stocks
+    except Exception as e:
+        print(f"NSE fetch failed: {e}, using fallback")
+        return FALLBACK_STOCKS
+
+# Keep existing 77 stocks as FALLBACK_STOCKS (rename current STOCKS dict to FALLBACK_STOCKS)
+STOCKS = load_nse_stocks()
+
+2. Since loading 2000+ stocks at once will be slow, implement smart pagination:
+   - Dashboard shows top 52 most traded stocks (NIFTY50 + NIFTY Next 50)
+   - /signals page shows all stocks with pagination (50 per page)
+   - /watchlist search dropdown searches across ALL loaded stocks
+   - Add a NIFTY50 list and NIFTY_NEXT50 list at top of app.py for prioritization
+
+3. Add these index lists at the top of app.py:
+
+NIFTY50 = ["RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK","HINDUNILVR",
+"ITC","SBIN","BHARTIARTL","KOTAKBANK","LT","AXISBANK","ASIANPAINT",
+"MARUTI","TITAN","SUNPHARMA","WIPRO","ULTRACEMCO","NESTLEIND","TECHM",
+"BAJFINANCE","BAJAJFINSV","HCLTECH","ADANIPORTS","ONGC","NTPC",
+"POWERGRID","TATAMOTORS","TATASTEEL","JSWSTEEL","HINDALCO","COALINDIA",
+"GRASIM","INDUSINDBK","DRREDDY","DIVISLAB","CIPLA","APOLLOHOSP",
+"EICHERMOT","HEROMOTOCO","BAJAJAUTO","BRITANNIA","TATACONSUM",
+"HAVELLS","PIDILITIND","SIEMENS","VEDL","MUTHOOTFIN","PERSISTENT","MAHINDRA"]
+
+4. For the /signals page, add index filter buttons at the top:
+   - "All Stocks" | "NIFTY 50" | "NIFTY Next 50" | "NIFTY Bank" | "NIFTY IT" | "NIFTY Pharma"
+   - Clicking a filter shows only signals for that index's stocks
+   - Default view shows NIFTY 50 stocks
+
+5. For the watchlist search, use a fast client-side search:
+   - Load all stock symbols as a JS array on page load
+   - Filter in real-time as user types (no API call needed)
+   - Show company name alongside symbol in dropdown
+
+6. Add a /api/all-stocks endpoint that returns all stock symbols as JSON:
+   {"stocks": ["RELIANCE", "TCS", ...], "total": 1800}
+
+7. Keep the existing 77 FALLBACK_STOCKS as backup in case NSE CSV fetch fails.
+
+After changes:
+- Restart the app
+- Confirm /api/all-stocks returns 1000+ stocks
+- Confirm dashboard still loads fast (only shows top 52)
+- Confirm watchlist search finds any NSE stock

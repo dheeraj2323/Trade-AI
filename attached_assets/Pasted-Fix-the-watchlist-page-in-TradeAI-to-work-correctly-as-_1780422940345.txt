@@ -1,0 +1,80 @@
+Fix the watchlist page in TradeAI to work correctly as a personal watchlist.
+
+CURRENT WRONG BEHAVIOR:
+- Watchlist shows all stocks or default 10 stocks for guests
+- This is wrong — watchlist should be empty until user adds stocks
+
+CORRECT BEHAVIOR TO IMPLEMENT:
+
+1. In app.py, fix the /watchlist route:
+   - For logged-in users: show ONLY stocks they have added to user_watchlist table
+   - If user_watchlist is empty for that user: show empty state (no default stocks)
+   - For guests (not logged in): show empty watchlist with message to login
+
+   @app.route('/watchlist')
+   def watchlist():
+       uid = session.get('user_id', None)
+       if not uid:
+           return render_template('watchlist.html', 
+               watchlist=[], 
+               all_stocks=list(STOCKS.keys()),
+               logged_in=False)
+       conn = sqlite3.connect(DB_PATH)
+       rows = conn.execute(
+           "SELECT symbol FROM user_watchlist WHERE user_id=?", (uid,)
+       ).fetchall()
+       conn.close()
+       user_stocks = [r[0] for r in rows]
+       return render_template('watchlist.html',
+           watchlist=user_stocks,
+           all_stocks=list(STOCKS.keys()),
+           logged_in=True)
+
+2. In watchlist.html, fix the page to show 3 states:
+
+   STATE 1 — Guest (not logged in):
+   - Show a lock icon with message:
+     "🔒 Login to create your personal watchlist"
+   - Blue "Login Now" button → /login
+   - Below that, show a read-only preview of top 10 trending stocks
+     with a note: "Login to add these to your watchlist"
+
+   STATE 2 — Logged in but watchlist is EMPTY:
+   - Show empty state illustration (use a simple SVG or emoji)
+   - Message: "Your watchlist is empty"
+   - Subtext: "Search and add stocks you want to track regularly"
+   - Search bar to add first stock
+
+   STATE 3 — Logged in with stocks in watchlist:
+   - Show ONLY the user's added stocks as cards/rows
+   - Each stock shows: Symbol, Company Name, Live Price, % Change, 
+     Today's Signal (BUY/SELL/HOLD badge), Strength score
+   - Red "Remove" button (trash icon) on each stock
+   - Search bar at top to add more stocks
+
+3. The ADD STOCK search bar (shown in State 2 and State 3):
+   - Searches across ALL stocks in STOCKS dict
+   - Real-time dropdown as user types
+   - Shows symbol + company name in dropdown
+   - Clicking a result calls POST /watchlist/add
+   - Stock appears instantly in watchlist without page reload
+   - If stock already in watchlist: show "Already added" toast
+
+4. Each watchlist stock card must show:
+   - Stock symbol (bold)
+   - Live price with green/red % change
+   - CNN Signal badge: BUY (green) / SELL (red) / HOLD (grey)
+   - Timeframe of signal: "1D Signal"
+   - Remove button (top right of card, red trash icon)
+
+5. Add a "Clear Watchlist" button at the bottom (only if watchlist has stocks)
+   - Asks confirmation: "Remove all stocks from watchlist?"
+   - Calls /watchlist/remove for each stock
+
+6. Show total count: "Your Watchlist (5 stocks)" in page heading
+
+After changes restart app and confirm:
+- Fresh logged-in user sees empty watchlist with search bar
+- Adding a stock shows it immediately
+- Removing a stock removes it immediately  
+- Guest sees login prompt

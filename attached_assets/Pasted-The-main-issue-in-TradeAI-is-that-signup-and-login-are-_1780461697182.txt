@@ -1,0 +1,77 @@
+The main issue in TradeAI is that signup and login are completely broken. 
+Users cannot create accounts or login. Fix this completely.
+
+Run these shell commands to diagnose and fix:
+
+1. First check the database:
+cd /home/runner/workspace/artifacts/tradeai && python3 -c "
+import sqlite3
+conn = sqlite3.connect('signals.db')
+tables = conn.execute(\"SELECT name FROM sqlite_master WHERE type='table'\").fetchall()
+print('Tables:', [t[0] for t in tables])
+try:
+    cols = conn.execute('PRAGMA table_info(users)').fetchall()
+    print('Users columns:', [c[1] for c in cols])
+    count = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+    print('User count:', count)
+except Exception as e:
+    print('Error:', e)
+conn.close()
+"
+
+2. Fix the users table - drop and recreate with correct schema:
+cd /home/runner/workspace/artifacts/tradeai && python3 -c "
+import sqlite3, hashlib
+conn = sqlite3.connect('signals.db')
+conn.execute('DROP TABLE IF EXISTS users')
+conn.execute('''CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+pw = hashlib.sha256('admin123'.encode()).hexdigest()
+conn.execute('INSERT INTO users (username,email,password_hash) VALUES (?,?,?)',
+             ('admin','admin@tradeai.com', pw))
+conn.commit()
+print('Users table recreated. Test user created: admin@tradeai.com / admin123')
+conn.close()
+"
+
+3. Make sure auth_signup and auth_login in app.py use SHA256 hashing.
+   Check what hash function is currently used:
+grep -n "hash\|sha\|password" app.py | grep -v "#" | head -20
+
+4. Fix app.py so BOTH auth routes use hashlib.sha256:
+   - Find the auth_signup function and make sure it hashes password with hashlib.sha256(password.encode()).hexdigest()
+   - Find the auth_login function and make sure it compares with hashlib.sha256(password.encode()).hexdigest()
+   - If any other hashing library is used (werkzeug, bcrypt etc), replace with hashlib.sha256
+
+5. Check signup.html and login.html form actions:
+grep -n "action\|method" templates/signup.html | head -5
+grep -n "action\|method" templates/login.html | head -5
+
+6. Make sure signup.html form posts to /auth/signup and login.html posts to /auth/login.
+   Fix if wrong:
+   - signup.html: <form method="POST" action="/auth/signup">
+   - login.html: <form method="POST" action="/auth/login">
+
+7. After all fixes, restart the app:
+pkill -f "python3 app.py" 2>/dev/null
+sleep 2
+cd /home/runner/workspace/artifacts/tradeai && python3 app.py &
+sleep 4
+
+8. Test signup and login:
+curl -s -X POST http://localhost:5000/auth/signup \
+  -d "username=testuser&email=test@test.com&password=test123" -L \
+  | grep -o '<title>.*</title>'
+
+curl -s -X POST http://localhost:5000/auth/login \
+  -d "email=admin@tradeai.com&password=admin123" -L \
+  -c /tmp/c.txt -b /tmp/c.txt \
+  | grep -o '<title>.*</title>'
+
+9. Show me the final result of each step.
+   The expected result for login test should be: <title>TradeAI - Dashboard</title>
+   If not, show me the full error.

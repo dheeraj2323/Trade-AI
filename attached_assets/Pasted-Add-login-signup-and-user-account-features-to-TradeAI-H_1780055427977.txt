@@ -1,0 +1,150 @@
+Add login, signup and user account features to TradeAI. Here are all the changes needed:
+
+=== PART 1: UPDATE app.py ===
+
+Add these imports at the top after existing imports:
+from flask import session, redirect
+from functools import wraps
+import hashlib
+
+Add this line right after app = Flask(__name__):
+app.secret_key = 'tradeai_secret_key_2026'
+
+Add users table inside init_db() function after the paper_trades table:
+c.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        created_at TEXT,
+        avatar_color TEXT DEFAULT '#1D9E75'
+    )
+""")
+
+Add these routes at the end of app.py before if __name__ == '__main__':
+
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
+@app.route('/signup')
+def signup_page():
+    return render_template('signup.html')
+
+@app.route('/profile')
+def profile_page():
+    if 'user_id' not in session:
+        return redirect('/login')
+    return render_template('profile.html')
+
+@app.route('/auth/signup', methods=['POST'])
+def auth_signup():
+    name = request.form.get('name')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    hashed = hashlib.sha256(password.encode()).hexdigest()
+    colors = ['#1D9E75','#378ADD','#7F77DD','#D85A30','#BA7517']
+    color = colors[len(email) % len(colors)]
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("INSERT INTO users (name,email,password,created_at,avatar_color) VALUES (?,?,?,?,?)",
+                  (name, email, hashed, now, color))
+        conn.commit()
+        conn.close()
+        return redirect('/login?success=Account created successfully! Please login.')
+    except Exception as e:
+        return redirect('/signup?error=Email already exists. Please use a different email.')
+
+@app.route('/auth/login', methods=['POST'])
+def auth_login():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    hashed = hashlib.sha256(password.encode()).hexdigest()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    user = c.execute("SELECT * FROM users WHERE email=? AND password=?", (email, hashed)).fetchone()
+    conn.close()
+    if user:
+        session['user_id'] = user[0]
+        session['user_name'] = user[1]
+        session['user_color'] = user[5] if len(user) > 5 else '#1D9E75'
+        return redirect('/')
+    return redirect('/login?error=Invalid email or password. Please try again.')
+
+@app.route('/auth/logout')
+def auth_logout():
+    session.clear()
+    return redirect('/login')
+
+@app.route('/api/user/info')
+def api_user_info():
+    if 'user_id' not in session:
+        return jsonify({"logged_in": False})
+    return jsonify({
+        "logged_in": True,
+        "user_id": session['user_id'],
+        "user_name": session['user_name'],
+        "user_color": session.get('user_color', '#1D9E75')
+    })
+
+=== PART 2: CREATE templates/login.html ===
+
+Create a new file templates/login.html with a professional dark themed login page:
+- Dark background #0d1117
+- Centered card with #161b22 background
+- TradeAI logo at top with green "AI" text
+- Tagline: "CNN-Powered Stock Signal Platform"
+- Email input field
+- Password input field
+- Green "Login to TradeAI" button
+- Link to signup page: "Don't have an account? Sign up free"
+- Show error message in red if URL has ?error= parameter
+- Show success message in green if URL has ?success= parameter
+- Footer: "For educational use only · Not SEBI registered"
+- Form posts to /auth/login
+
+=== PART 3: CREATE templates/signup.html ===
+
+Create a new file templates/signup.html with same dark theme:
+- Same design as login page
+- Tagline: "Create your free account"
+- Full Name input field
+- Email input field  
+- Password input field (minimum 6 characters)
+- Confirm Password field with JavaScript validation
+- Green "Create Account" button
+- Link to login: "Already have an account? Login"
+- Show error message if URL has ?error= parameter
+- Form posts to /auth/signup
+- Password strength indicator (weak/medium/strong) using JavaScript
+
+=== PART 4: CREATE templates/profile.html ===
+
+Create templates/profile.html showing:
+- Same navbar as other pages but with user avatar
+- Large avatar circle with first letter of username in their color
+- User name and email
+- Member since date
+- Stats cards: Total Paper Trades, Win Rate, Best P&L
+- Recent paper trades table (last 10)
+- Logout button (red, links to /auth/logout)
+- Fetch user info from /api/user/info
+
+=== PART 5: UPDATE NAVBAR on all existing templates ===
+
+Update the navbar in index.html, watchlist.html, signals.html, history.html, portfolio.html to show:
+- Right side: if logged in show avatar circle + username + dropdown menu
+- Dropdown items: My Profile (/profile) | Logout (/auth/logout)
+- If not logged in: show Login button linking to /login
+- Fetch login status from /api/user/info on page load
+- Avatar circle = colored circle with first letter of username
+
+=== IMPORTANT ===
+- Do not break any existing functionality
+- Keep all existing routes working
+- The login and signup pages should NOT have the main navbar
+- All other pages keep their existing navbar but add user info to it
+- Make sure session works correctly across all pages
