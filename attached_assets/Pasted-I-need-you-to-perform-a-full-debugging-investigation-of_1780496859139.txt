@@ -1,0 +1,67 @@
+I need you to perform a full debugging investigation of this project and fix the issues directly in the code.
+
+CRITICAL ISSUES:
+
+1. User signup is broken.
+
+* When a user fills out the signup form and clicks "Create Account", no account is created.
+* The user cannot log in afterward because the account was never stored.
+* There may be frontend, backend, database, API, validation, session, or deployment issues.
+* Trace the complete signup flow from the HTML form to the backend route, database write, and login system.
+
+2. Watchlist is broken.
+
+* After login, when a user clicks "Add Stock" on the watchlist page, the stock is not added to the watchlist.
+* Trace the complete flow from button click → JavaScript → API request → backend route → database storage → retrieval.
+
+REQUIREMENTS:
+
+1. Inspect the entire project.
+
+2. Find the ROOT CAUSE of each issue.
+
+3. Do not make assumptions.
+
+4. Verify that the relevant routes, forms, APIs, database models, and database tables exist and are connected correctly.
+
+5. Check for:
+
+   * Missing routes
+   * Incorrect URLs
+   * JavaScript errors
+   * Failed fetch requests
+   * Form submission issues
+   * Database initialization issues
+   * Missing tables
+   * SQLAlchemy model problems
+   * Session/authentication problems
+   * Render deployment compatibility issues
+   * Environment variable issues
+   * CSRF or validation failures
+
+6. Fix the code directly.
+
+7. After making changes, provide:
+
+   * Root cause of signup issue
+   * Root cause of watchlist issue
+   * Files changed
+   * Exact changes made
+   * How to test the fixes
+
+8. Verify the following workflow works completely:
+
+   * Create account
+   * Login
+   * Add stock to watchlist
+   * Refresh page
+   * Stock remains in watchlist
+   * Logout
+   * Login again
+   * Watchlist data still exists
+
+9. If database tables are missing, automatically create the required initialization code.
+
+10. Do not stop after finding one issue. Continue until both signup and watchlist functionality are fully working.
+
+Please analyze the entire project and implement the fixes, not just explain them.
