@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>TradeAI — Create Account</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #0f0f0f;
+      --card:    #1a1a2e;
+      --border:  #2a2a4a;
+      --txt:     #e8eaf0;
+      --muted:   #8b949e;
+      --accent:  #00d4ff;
+      --accent2: #0099cc;
+      --error:   #ff4d6d;
+      --buy:     #00d964;
+      --sell:    #ff4757;
+      --hold:    #ffa502;
+      --inp:     #0d1117;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background-image:
+        radial-gradient(ellipse at 80% 60%, rgba(0,212,255,.07) 0%, transparent 55%),
+        radial-gradient(ellipse at 20% 10%, rgba(0,153,204,.05) 0%, transparent 55%);
+    }
+
+    /* ── Brand ── */
+    .brand { text-align: center; margin-bottom: 1.5rem; }
+    .brand-icon {
+      width: 58px; height: 58px;
+      background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(0,212,255,.28));
+      border: 1.5px solid rgba(0,212,255,.38);
+      border-radius: 15px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.65rem; color: var(--accent);
+      margin-bottom: .7rem;
+      box-shadow: 0 0 22px rgba(0,212,255,.18);
+    }
+    .brand h1 { font-size: 1.85rem; font-weight: 800; color: #fff; letter-spacing: -.4px; }
+    .brand h1 span { color: var(--accent); }
+    .brand p { font-size: .78rem; color: var(--muted); margin-top: .2rem; letter-spacing: .04em; text-transform: uppercase; }
+
+    /* ── Card ── */
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.2rem 2rem;
+      width: 100%; max-width: 440px;
+      box-shadow: 0 28px 70px rgba(0,0,0,.55);
+    }
+    .auth-card h2 { font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 1.3rem; }
+
+    /* ── Inputs ── */
+    .form-label {
+      font-size: .72rem; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: .07em;
+      margin-bottom: .35rem; display: block;
+    }
+    .form-control {
+      background: var(--inp); border: 1px solid var(--border);
+      border-radius: 9px; color: var(--txt);
+      font-size: .9rem; padding: .65rem 1rem;
+      transition: border-color .18s, box-shadow .18s; width: 100%;
+    }
+    .form-control:focus {
+      background: var(--inp); border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,212,255,.13); color: var(--txt); outline: none;
+    }
+    .form-control::placeholder { color: #383860; }
+
+    /* password group */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap .form-control { padding-right: 2.8rem; }
+    .pwd-toggle {
+      position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1rem; padding: 0; line-height: 1;
+      transition: color .18s;
+    }
+    .pwd-toggle:hover { color: var(--accent); }
+
+    /* ── Strength bar ── */
+    .strength-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-top: .35rem; }
+    .strength-fill { height: 100%; border-radius: 2px; transition: all .25s; width: 0%; }
+    .strength-label { font-size: .68rem; margin-top: .2rem; color: var(--muted); }
+
+    /* ── Button ── */
+    .btn-auth {
+      width: 100%;
+      background: linear-gradient(135deg, #00d4ff, #0099cc);
+      border: none; border-radius: 9px;
+      color: #000; font-weight: 700; font-size: .93rem;
+      padding: .75rem; cursor: pointer;
+      transition: opacity .18s, transform .14s, box-shadow .18s;
+      letter-spacing: .02em; margin-top: .5rem;
+    }
+    .btn-auth:hover {
+      opacity: .88; transform: translateY(-1px);
+      box-shadow: 0 10px 28px rgba(0,212,255,.32);
+    }
+    .btn-auth:active { transform: translateY(0); }
+
+    /* ── Links ── */
+    .link-accent { color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity .18s; }
+    .link-accent:hover { opacity: .75; text-decoration: underline; }
+
+    /* ── Error ── */
+    .error-box {
+      background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.32);
+      border-radius: 9px; padding: .6rem .95rem;
+      font-size: .84rem; color: var(--error);
+      display: flex; align-items: center; gap: .45rem;
+      margin-bottom: 1.1rem;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex; align-items: center; gap: .7rem;
+      color: var(--muted); font-size: .74rem; margin: 1.1rem 0;
+    }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      margin-top: 1.8rem; font-size: .68rem; color: #3a3a5a;
+      text-align: center; max-width: 440px; line-height: 1.6;
+    }
+    .disclaimer strong { color: #55557a; }
+
+    .mb-f { margin-bottom: .9rem; }
+    .match-msg { font-size: .68rem; margin-top: .2rem; min-height: 1rem; }
+  </style>
+  <style>
+    [data-replit-watermark],
+    .replit-ui-theme-root,
+    iframe[src*="replit"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="brand">
+    <div class="brand-icon"><i class="bi bi-graph-up-arrow"></i></div>
+    <h1>Trade<span>AI</span></h1>
+    <p>CNN-Powered Stock Signal Platform</p>
+  </div>
+
+  <div class="auth-card">
+    <h2>Create your free account</h2>
+
+    {% if error %}
+    <div class="error-box"><i class="bi bi-exclamation-circle-fill"></i> {{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/auth/signup" autocomplete="on" onsubmit="return validateForm()">
+      <div class="mb-f">
+        <label class="form-label" for="username">Username</label>
+        <input type="text" class="form-control" id="username" name="username"
+               placeholder="Choose a username" required minlength="3" autocomplete="username"/>
+      </div>
+
+      <div class="mb-f">
+        <label class="form-label" for="email">Email address</label>
+        <input type="email" class="form-control" id="email" name="email"
+               placeholder="you@example.com" required autocomplete="email"/>
+      </div>
+
+      <div class="mb-f">
+        <label class="form-label" for="password">
+          Password <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(min. 6 characters)</span>
+        </label>
+        <div class="pwd-wrap">
+          <input type="password" class="form-control" id="password" name="password"
+                 placeholder="Create a strong password" required minlength="6"
+                 autocomplete="new-password" oninput="checkStrength(this.value)"/>
+          <button type="button" class="pwd-toggle" onclick="togglePwd('password','eye1')" tabindex="-1">
+            <i class="bi bi-eye" id="eye1"></i>
+          </button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="str-bar"></div></div>
+        <div class="strength-label" id="str-label">Enter a password</div>
+      </div>
+
+      <div class="mb-f">
+        <label class="form-label" for="confirm_password">Confirm Password</label>
+        <div class="pwd-wrap">
+          <input type="password" class="form-control" id="confirm_password"
+                 placeholder="Repeat your password" required autocomplete="new-password"
+                 oninput="checkMatch()"/>
+          <button type="button" class="pwd-toggle" onclick="togglePwd('confirm_password','eye2')" tabindex="-1">
+            <i class="bi bi-eye" id="eye2"></i>
+          </button>
+        </div>
+        <div class="match-msg" id="match-msg"></div>
+      </div>
+
+      <button type="submit" class="btn-auth">
+        <i class="bi bi-person-plus me-2"></i>Create Account
+      </button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <p style="text-align:center;font-size:.88rem;color:var(--muted)">
+      Already have an account? <a href="/login" class="link-accent">Login</a>
+    </p>
+  </div>
+
+  <div class="disclaimer">
+    <i class="bi bi-shield-check"></i>
+    <strong>SEBI Disclaimer:</strong> TradeAI provides AI-generated signals for educational and
+    informational purposes only. These are not investment recommendations. Investments in securities
+    markets are subject to market risks. Please read all related documents carefully before investing.
+    Past performance is not indicative of future results.
+  </div>
+
+  <script>
+    function togglePwd(inputId, iconId) {
+      const inp = document.getElementById(inputId);
+      const ico = document.getElementById(iconId);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    }
+
+    function checkStrength(v) {
+      const bar = document.getElementById('str-bar');
+      const lbl = document.getElementById('str-label');
+      if (!v) { bar.style.width = '0%'; lbl.textContent = 'Enter a password'; lbl.style.color = 'var(--muted)'; return; }
+      let score = 0;
+      if (v.length >= 6)  score++;
+      if (v.length >= 10) score++;
+      if (/[A-Z]/.test(v)) score++;
+      if (/[0-9]/.test(v)) score++;
+      if (/[^A-Za-z0-9]/.test(v)) score++;
+      const map = [
+        [20, 'var(--sell)', 'Weak'],
+        [40, 'var(--sell)', 'Weak'],
+        [60, 'var(--hold)', 'Fair'],
+        [80, 'var(--buy)',  'Strong'],
+        [100,'var(--buy)',  'Very Strong']
+      ];
+      const [w, c, t] = map[Math.min(score, 4)];
+      bar.style.width = w + '%'; bar.style.background = c;
+      lbl.textContent = t; lbl.style.color = c;
+      checkMatch();
+    }
+
+    function checkMatch() {
+      const p1 = document.getElementById('password').value;
+      const p2 = document.getElementById('confirm_password').value;
+      const msg = document.getElementById('match-msg');
+      if (!p2) { msg.innerHTML = ''; return; }
+      if (p1 === p2) {
+        msg.innerHTML = '<span style="color:var(--buy)"><i class="bi bi-check-circle-fill me-1"></i>Passwords match</span>';
+      } else {
+        msg.innerHTML = '<span style="color:var(--sell)"><i class="bi bi-x-circle-fill me-1"></i>Passwords do not match</span>';
+      }
+    }
+
+    function validateForm() {
+      const p1 = document.getElementById('password').value;
+      const p2 = document.getElementById('confirm_password').value;
+      if (p1 !== p2) { alert('Passwords do not match.'); return false; }
+      if (p1.length < 6) { alert('Password must be at least 6 characters.'); return false; }
+      return true;
+    }
+  </script>
+</body>
+</html>

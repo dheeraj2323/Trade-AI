@@ -1,0 +1,13 @@
+kind = "web"
+previewPath = "/"
+title = "TradeAI"
+version = "1.0.0"
+id = "tradeai"
+
+[[services]]
+localPort = 5000
+name = "TradeAI"
+paths = ["/"]
+
+[services.development]
+run = "python app.py"
