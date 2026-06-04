@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TradeAI — Watchlist</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--txt:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--buy:#00d964;--sell:#ff4757;--hold:#ffa502}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;margin:0}
+.navbar{background:var(--card);border-bottom:1px solid var(--border);padding:.55rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.navbar-brand{font-weight:700;font-size:1.15rem;color:var(--txt)!important;text-decoration:none}.navbar-brand span{color:var(--blue)}
+.nav-link{color:var(--muted)!important;font-size:.88rem;text-decoration:none;padding:.3rem .6rem;border-radius:6px;transition:all .15s}
+.nav-link:hover,.nav-link.active{color:var(--txt)!important;background:#1c2230}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--buy);display:inline-block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.filter-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:.28rem .82rem;font-size:.81rem;cursor:pointer;transition:all .15s}
+.filter-btn:hover,.filter-btn.active{background:var(--blue);border-color:var(--blue);color:#0d1117;font-weight:600}
+.b-buy{background:#0d2e1a;color:var(--buy);border:1px solid var(--buy);border-radius:5px;padding:.13rem .55rem;font-size:.75rem;font-weight:700;display:inline-block}
+.b-sell{background:#2e0d0d;color:var(--sell);border:1px solid var(--sell);border-radius:5px;padding:.13rem .55rem;font-size:.75rem;font-weight:700;display:inline-block}
+.b-hold{background:#2e220a;color:var(--hold);border:1px solid var(--hold);border-radius:5px;padding:.13rem .55rem;font-size:.75rem;font-weight:700;display:inline-block}
+
+/* Watchlist cards */
+.wl-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.95rem 1.1rem;transition:border-color .15s,transform .12s;position:relative}
+.wl-card:hover{border-color:#3d444d;transform:translateY(-1px)}
+.wl-symbol{font-size:1.05rem;font-weight:700;letter-spacing:.01em}
+.wl-name{font-size:.68rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.wl-price{font-size:1.12rem;font-weight:700}
+.wl-chg{font-size:.78rem;font-weight:600;padding:.1rem .38rem;border-radius:4px}
+.wl-chg.up{background:rgba(0,217,100,.12);color:var(--buy)}
+.wl-chg.dn{background:rgba(255,71,87,.12);color:var(--sell)}
+.conf-bar{height:3px;border-radius:2px;background:#1c2230;overflow:hidden;margin:.35rem 0 .15rem}
+.conf-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .4s}
+.btn-remove{background:transparent;border:1px solid transparent;color:var(--muted);border-radius:6px;padding:.2rem .48rem;font-size:.78rem;cursor:pointer;transition:all .12s}
+.btn-remove:hover{border-color:var(--sell);color:var(--sell);background:rgba(255,71,87,.08)}
+.btn-view-sm{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:.2rem .55rem;font-size:.74rem;cursor:pointer;text-decoration:none;transition:all .12s;display:inline-block}
+.btn-view-sm:hover{border-color:var(--blue);color:var(--blue)}
+
+/* Search */
+.add-search-wrap{position:relative;width:100%;max-width:420px}
+.add-search-input{width:100%;background:#0d1117;border:1px solid var(--border);border-radius:8px;color:var(--txt);padding:.5rem .9rem .5rem 2.35rem;font-size:.875rem;outline:none;transition:border-color .15s}
+.add-search-input:focus{border-color:var(--blue)}
+.add-search-input::placeholder{color:var(--muted);font-size:.83rem}
+.add-search-icon{position:absolute;left:.78rem;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.add-drop{display:none;position:absolute;top:calc(100% + 5px);left:0;right:0;background:#1c2230;border:1px solid var(--border);border-radius:9px;max-height:240px;overflow-y:auto;z-index:999;box-shadow:0 8px 28px rgba(0,0,0,.55)}
+.add-drop-item{padding:.45rem .88rem;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:center;transition:background .1s}
+.add-drop-item:last-child{border-bottom:none}
+.add-drop-item:hover{background:rgba(88,166,255,.1)}
+
+/* Empty/guest states */
+.state-icon{font-size:3.2rem;margin-bottom:.7rem;opacity:.85}
+.state-title{font-size:1.05rem;font-weight:700;margin-bottom:.35rem}
+.state-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.3rem}
+
+/* Trending preview */
+.trend-row{display:flex;align-items:center;justify-content:space-between;padding:.42rem .9rem;border-bottom:1px solid #1c2230;font-size:.82rem}
+.trend-row:last-child{border-bottom:none}
+.trend-row:hover{background:rgba(88,166,255,.04)}
+
+/* Toast */
+#toast-area{position:fixed;bottom:1.4rem;right:1.4rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+
+footer{background:var(--card);border-top:1px solid var(--border);padding:1.1rem 1.5rem;margin-top:2.5rem}
+</style>
+<style>
+  [data-replit-watermark],
+  .replit-ui-theme-root,
+  iframe[src*="replit"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+</style>
+</head>
+<body>
+<div id="page-loader" style="position:fixed;inset:0;background:rgba(13,17,23,.88);z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .3s">
+  <div style="text-align:center"><div class="spinner-border" style="color:#58a6ff;width:2.2rem;height:2.2rem" role="status"></div><div style="color:#8b949e;font-size:.82rem;margin-top:.55rem">Loading watchlist…</div></div>
+</div>
+<div id="toast-area"></div>
+
+<nav class="navbar">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/"><i class="bi bi-graph-up-arrow"></i> Trade<span>AI</span></a>
+    <div class="d-flex gap-1 flex-wrap">
+      <a class="nav-link" href="/">Dashboard</a>
+      <a class="nav-link active" href="/watchlist">Watchlist</a>
+      <a class="nav-link" href="/signals">Signals</a>
+      <a class="nav-link" href="/history">History</a>
+      <a class="nav-link" href="/portfolio">Portfolio</a>
+    </div>
+    <div id="market-status"></div>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <span class="live-dot"></span><span style="color:var(--buy);font-weight:600;font-size:.82rem">LIVE</span>
+    <div id="user-nav-area"></div>
+  </div>
+</nav>
+
+<div class="container-fluid px-3 py-3" style="max-width:1400px">
+
+  <!-- Page header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="fs-5 fw-bold mb-0" id="page-heading">Watchlist</h1>
+      <p class="mb-0" id="page-sub" style="font-size:.78rem;color:var(--muted)">Your personal tracked stocks</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="filter-btn" id="btn-refresh" onclick="reload()" style="display:none"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── STATE: GUEST (not logged in) ─────────────────────────────────────── -->
+  <div id="state-guest" style="display:none">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:2.5rem 1rem 1.5rem">
+      <div class="state-icon">🔒</div>
+      <div class="state-title">Login to create your personal watchlist</div>
+      <div class="state-sub">Track your favourite stocks and see live signals in one place</div>
+      <a href="/login" style="background:var(--blue);color:#0d1117;border:none;border-radius:8px;padding:.52rem 1.5rem;font-size:.9rem;font-weight:700;text-decoration:none;margin-bottom:.6rem">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Login Now
+      </a>
+      <a href="/signup" style="background:transparent;color:var(--blue);border:1px solid var(--blue);border-radius:8px;padding:.42rem 1.2rem;font-size:.82rem;text-decoration:none">
+        Create Account
+      </a>
+    </div>
+    <!-- Trending preview -->
+    <div style="max-width:620px;margin:1.5rem auto 0">
+      <div style="font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:.5rem;text-align:center;letter-spacing:.05em">TRENDING STOCKS · Login to add to watchlist</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden">
+        <div style="background:#0d1117;display:flex;padding:.35rem .9rem;border-bottom:1px solid var(--border)">
+          <span style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;flex:1">Symbol</span>
+          <span style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;width:90px;text-align:right">Price</span>
+          <span style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;width:70px;text-align:right">Signal</span>
+        </div>
+        <div id="trending-rows">
+          <div class="text-center text-muted py-3" style="font-size:.82rem">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STATE: EMPTY WATCHLIST (logged in) ─────────────────────────────── -->
+  <div id="state-empty" style="display:none">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:2rem 1rem 1rem">
+      <div class="state-icon">📋</div>
+      <div class="state-title">Your watchlist is empty</div>
+      <div class="state-sub">Search and add stocks you want to track regularly</div>
+      <!-- Add search for empty state -->
+      <div class="add-search-wrap" style="max-width:380px">
+        <i class="bi bi-search add-search-icon"></i>
+        <input type="text" id="empty-search" class="add-search-input"
+               placeholder="Search NSE stocks to add… (e.g. RELIANCE)"
+               oninput="onAddSearch(this.value,'empty-drop')"
+               onblur="setTimeout(()=>hideDrop('empty-drop'),200)"
+               autocomplete="off"/>
+        <div id="empty-drop" class="add-drop"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STATE: WATCHLIST WITH STOCKS ──────────────────────────────────── -->
+  <div id="state-list" style="display:none">
+    <!-- Add stock bar -->
+    <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+      <div class="add-search-wrap" style="max-width:380px">
+        <i class="bi bi-plus-circle add-search-icon" style="color:var(--blue)"></i>
+        <input type="text" id="list-search" class="add-search-input"
+               placeholder="Add a stock… (search by symbol or name)"
+               oninput="onAddSearch(this.value,'list-drop')"
+               onblur="setTimeout(()=>hideDrop('list-drop'),200)"
+               autocomplete="off"/>
+        <div id="list-drop" class="add-drop"></div>
+      </div>
+    </div>
+
+    <!-- Cards grid -->
+    <div class="row g-3 mb-4" id="wl-grid"></div>
+
+    <!-- Clear watchlist -->
+    <div style="text-align:center;margin-top:.5rem">
+      <button onclick="clearWatchlist()" style="background:transparent;border:1px solid rgba(255,71,87,.35);color:var(--sell);border-radius:7px;padding:.3rem .9rem;font-size:.78rem;cursor:pointer;transition:all .15s"
+              onmouseover="this.style.background='rgba(255,71,87,.08)'" onmouseout="this.style.background='transparent'">
+        <i class="bi bi-trash3 me-1"></i>Clear Watchlist
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div style="max-width:1400px;margin:0 auto">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div><div style="font-weight:700;font-size:.9rem"><i class="bi bi-graph-up-arrow me-1"></i>TradeAI</div><div style="font-size:.72rem;color:var(--muted)">CNN-Based Stock Signal Platform</div></div>
+      <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem"><a href="/" style="color:var(--muted);text-decoration:none">Dashboard</a><a href="/watchlist" style="color:var(--muted);text-decoration:none">Watchlist</a><a href="/signals" style="color:var(--muted);text-decoration:none">Signals</a><a href="/history" style="color:var(--muted);text-decoration:none">History</a><a href="/portfolio" style="color:var(--muted);text-decoration:none">Portfolio</a></div>
+      <div style="font-size:.72rem;color:var(--sell);font-weight:600">For Educational Use Only · Not SEBI Registered</div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:.8rem;padding-top:.6rem;font-size:.67rem;color:var(--muted)">DISCLAIMER: TradeAI is an academic research project for educational purposes only. Signals do NOT constitute financial advice. Not SEBI registered.</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const fmt=n=>typeof n==='number'?n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}):n;
+const badge=a=>`<span class="b-${a.toLowerCase()}">${a}</span>`;
+
+let allStockList=[];
+let _currentWatchlist=[];
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+function hideLoader(){const l=document.getElementById('page-loader');if(l){l.style.opacity='0';setTimeout(()=>l.remove(),300);}}
+function showToast(msg,type='info'){
+  const c={success:'#00d964',error:'#ff4757',info:'#58a6ff',warn:'#ffa502'}[type]||'#58a6ff';
+  const t=document.createElement('div');
+  t.style.cssText=`background:#161b22;border:1px solid ${c};border-radius:8px;padding:.55rem .9rem;font-size:.82rem;color:#e6edf3;max-width:280px;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:opacity .3s;pointer-events:auto`;
+  t.innerHTML=`<span style="color:${c};margin-right:.4rem">●</span>${msg}`;
+  document.getElementById('toast-area').appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';},2800);setTimeout(()=>t.remove(),3100);
+}
+function updateMarketStatus(){
+  const el=document.getElementById('market-status');if(!el)return;
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const m=now.getHours()*60+now.getMinutes();
+  if(m>=9*60+15&&m<15*60+30) el.innerHTML='<span style="background:rgba(0,217,100,.1);color:#00d964;border:1px solid rgba(0,217,100,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">● Market Open</span>';
+  else if(m>=9*60&&m<9*60+15) el.innerHTML='<span style="background:rgba(255,165,2,.1);color:#ffa502;border:1px solid rgba(255,165,2,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">◐ Pre-Market</span>';
+  else el.innerHTML='<span style="background:rgba(255,71,87,.1);color:#ff4757;border:1px solid rgba(255,71,87,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">● Market Closed</span>';
+}
+updateMarketStatus();setInterval(updateMarketStatus,30000);
+
+// ── Search dropdown ───────────────────────────────────────────────────────────
+function onAddSearch(q,dropId){
+  const drop=document.getElementById(dropId);
+  if(!q||q.length<1){drop.style.display='none';return;}
+  const ql=q.toUpperCase();
+  const matches=allStockList.filter(s=>s.symbol.includes(ql)||(s.name&&s.name.toUpperCase().includes(ql))).slice(0,12);
+  if(!matches.length){drop.style.display='none';return;}
+  const alreadySet=new Set(_currentWatchlist.map(w=>w.symbol));
+  drop.innerHTML=matches.map(s=>{
+    const already=alreadySet.has(s.symbol);
+    return`<div class="add-drop-item" onclick="${already?'':("addStock('"+s.symbol+"')")}">
+      <div style="display:flex;gap:.6rem;align-items:center">
+        <span style="font-weight:700;font-size:.87rem">${s.symbol}</span>
+        <span style="font-size:.72rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name||''}</span>
+      </div>
+      ${already?`<span style="font-size:.7rem;color:var(--muted)">Already added</span>`:`<span style="font-size:.72rem;color:var(--blue)">+ Add</span>`}
+    </div>`;
+  }).join('');
+  drop.style.display='block';
+}
+function hideDrop(id){const d=document.getElementById(id);if(d)d.style.display='none';}
+
+// ── Add stock ─────────────────────────────────────────────────────────────────
+async function addStock(sym){
+  hideDrop('empty-drop');hideDrop('list-drop');
+  const inp1=document.getElementById('empty-search');const inp2=document.getElementById('list-search');
+  if(inp1)inp1.value='';if(inp2)inp2.value='';
+  if(_currentWatchlist.some(w=>w.symbol===sym)){showToast(`${sym} is already in your watchlist`,'warn');return;}
+  try{
+    const r=await fetch('/watchlist/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:sym})});
+    const d=await r.json();
+    if(d.status==='added'){showToast(`✓ ${sym} added to watchlist`,'success');reload();}
+    else showToast(d.msg||'Could not add stock','error');
+  }catch(e){showToast('Network error','error');}
+}
+
+// ── Remove stock ──────────────────────────────────────────────────────────────
+async function removeStock(sym){
+  try{
+    await fetch('/watchlist/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:sym})});
+    showToast(`${sym} removed`,'info');reload();
+  }catch(e){showToast('Network error','error');}
+}
+
+// ── Clear all ─────────────────────────────────────────────────────────────────
+async function clearWatchlist(){
+  if(!confirm('Remove all stocks from your watchlist?'))return;
+  try{
+    await fetch('/watchlist/clear',{method:'POST'});
+    showToast('Watchlist cleared','info');reload();
+  }catch(e){showToast('Network error','error');}
+}
+
+// ── Render cards ──────────────────────────────────────────────────────────────
+function renderCards(list){
+  if(!list.length){document.getElementById('wl-grid').innerHTML='';return;}
+  document.getElementById('wl-grid').innerHTML=list.map(w=>{
+    const chgCls=w.change>=0?'up':'dn';
+    const chgArrow=w.change>=0?'▲':'▼';
+    const agreeLabel=w.agree>=6?'Very Strong':w.agree>=4?'Strong':w.agree>=3?'Moderate':'Weak';
+    const agreeColor=w.agree>=4?'var(--buy)':w.agree>=3?'var(--hold)':'var(--muted)';
+    return`<div class="col-sm-6 col-md-4 col-xl-3">
+      <div class="wl-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem">
+          <div>
+            <div class="wl-symbol">${w.symbol}</div>
+            <div class="wl-name" title="${w.name||''}">${w.name||''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.3rem">
+            ${badge(w.signal)}
+            <button class="btn-remove" onclick="removeStock('${w.symbol}')" title="Remove from watchlist"><i class="bi bi-trash3"></i></button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:.5rem;margin-bottom:.3rem">
+          <span class="wl-price">₹${fmt(w.ltp)}</span>
+          <span class="wl-chg ${chgCls}">${chgArrow} ${Math.abs(w.change)}%</span>
+        </div>
+        <div style="font-size:.67rem;color:var(--muted);margin-bottom:.2rem">${w.timeframe} · ${w.pattern||'—'}</div>
+        <div class="conf-bar"><div class="conf-fill" style="width:${w.confidence}%"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.67rem;color:var(--muted)">Conf <span style="color:var(--blue)">${w.confidence}%</span></span>
+          <span style="font-size:.62rem;color:${agreeColor}">${w.agree}/6 ${agreeLabel}</span>
+        </div>
+        <div style="border-top:1px solid var(--border);margin-top:.65rem;padding-top:.55rem">
+          <a href="/stock/${w.symbol}" class="btn-view-sm"><i class="bi bi-bar-chart-line me-1"></i>View Chart</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render trending (guest preview) ──────────────────────────────────────────
+function renderTrending(signals){
+  const top=signals.sort((a,b)=>(b.primary_confidence||b.confidence)-(a.primary_confidence||a.confidence)).slice(0,10);
+  document.getElementById('trending-rows').innerHTML=top.map(s=>{
+    const sig=s.primary_signal||s.action;
+    return`<div class="trend-row">
+      <span style="font-weight:700;font-size:.87rem;flex:1">${s.symbol}</span>
+      <span style="width:90px;text-align:right;font-weight:600">₹${fmt(s.entry)}</span>
+      <span style="width:70px;text-align:right">${badge(sig)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Show correct state ────────────────────────────────────────────────────────
+function showState(state){
+  ['guest','empty','list'].forEach(s=>document.getElementById('state-'+s).style.display='none');
+  document.getElementById('state-'+state).style.display='block';
+}
+
+// ── Main load ─────────────────────────────────────────────────────────────────
+async function reload(){
+  try{
+    const r=await fetch('/data/watchlist/user');
+    const d=await r.json();
+    if(!d.logged_in){
+      document.getElementById('page-heading').textContent='Watchlist';
+      document.getElementById('page-sub').textContent='Login to create your personal watchlist';
+      document.getElementById('btn-refresh').style.display='none';
+      showState('guest');
+      // Load trending for guest preview
+      fetch('/data/signals').then(r2=>r2.json()).then(sd=>{renderTrending(sd.signals||[]);}).catch(()=>{});
+    } else {
+      _currentWatchlist=d.watchlist||[];
+      const n=_currentWatchlist.length;
+      document.getElementById('page-heading').textContent=`Your Watchlist${n?` (${n} stock${n!==1?'s':''})`:' (empty)'}`;
+      document.getElementById('page-sub').textContent=n?`${n} stock${n!==1?'s':''} tracked · signals updated live`:'Add stocks to start tracking them';
+      document.getElementById('btn-refresh').style.display='inline-block';
+      if(!n){
+        showState('empty');
+      } else {
+        showState('list');
+        renderCards(_currentWatchlist);
+      }
+    }
+    hideLoader();
+  }catch(e){hideLoader();}
+}
+
+// ── Load all NSE stocks for search ───────────────────────────────────────────
+fetch('/data/all-stocks').then(r=>r.json()).then(d=>{allStockList=d.stocks||[];}).catch(()=>{});
+
+reload();
+setInterval(reload,60000);
+</script>
+<script>
+(function(){fetch('/data/user/info').then(r=>r.json()).then(u=>{const area=document.getElementById('user-nav-area');if(!area)return;if(u.logged_in){const init=u.user_name.charAt(0).toUpperCase();const col=u.user_color||'#1D9E75';area.innerHTML=`<div class="dropdown"><button style="width:30px;height:30px;border-radius:50%;background:${col};border:none;color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">${init}</button><ul class="dropdown-menu dropdown-menu-end" style="background:#161b22;border:1px solid #30363d;border-radius:8px;min-width:165px"><li><span style="font-size:.7rem;color:#8b949e;padding:.25rem .9rem;display:block">Hi, ${u.user_name}</span></li><li><hr class="dropdown-divider" style="border-color:#30363d;margin:.15rem 0"></li><li><a class="dropdown-item" href="/profile" style="color:#e6edf3;font-size:.82rem"><i class="bi bi-person me-1"></i>My Profile</a></li><li><a class="dropdown-item" href="/logout" style="color:#ff4757;font-size:.82rem"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li></ul></div>`;}else{area.innerHTML=`<a href="/login" style="background:transparent;border:1px solid #30363d;color:#e6edf3;border-radius:7px;padding:.25rem .75rem;font-size:.8rem;text-decoration:none;white-space:nowrap"><i class="bi bi-person me-1"></i>Login</a>`;}}).catch(()=>{});})();
+</script>
+</body>
+</html>

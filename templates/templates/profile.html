@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TradeAI — My Profile</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--txt:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--buy:#00d964;--sell:#ff4757;--hold:#ffa502}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;margin:0}
+.navbar{background:var(--card);border-bottom:1px solid var(--border);padding:.55rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.navbar-brand{font-weight:700;font-size:1.15rem;color:var(--txt)!important;text-decoration:none}.navbar-brand span{color:var(--blue)}
+.nav-link{color:var(--muted)!important;font-size:.88rem;text-decoration:none;padding:.3rem .6rem;border-radius:6px;transition:all .15s}
+.nav-link:hover,.nav-link.active{color:var(--txt)!important;background:#1c2230}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--buy);display:inline-block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.avatar-lg{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:#fff}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.9rem 1.15rem;text-align:center}
+.stat-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.stat-val{font-size:1.55rem;font-weight:700;margin-top:.15rem}
+.b-buy{background:#0d2e1a;color:var(--buy);border:1px solid var(--buy);border-radius:5px;padding:.13rem .55rem;font-size:.75rem;font-weight:700;display:inline-block}
+.b-sell{background:#2e0d0d;color:var(--sell);border:1px solid var(--sell);border-radius:5px;padding:.13rem .55rem;font-size:.75rem;font-weight:700;display:inline-block}
+.b-hold{background:#2e220a;color:var(--hold);border:1px solid var(--hold);border-radius:5px;padding:.13rem .55rem;font-size:.75rem;font-weight:700;display:inline-block}
+.t-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.t-wrap th{background:#0d1117;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;padding:.55rem .75rem;border-bottom:1px solid var(--border)}
+.t-wrap td{padding:.45rem .75rem;border-bottom:1px solid #1c2230;font-size:.82rem;vertical-align:middle}
+.t-wrap tr:last-child td{border-bottom:none}
+.btn-logout{background:transparent;border:1px solid var(--sell);color:var(--sell);border-radius:8px;padding:.4rem 1.1rem;font-size:.84rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .15s;display:inline-flex;align-items:center;gap:.4rem}
+.btn-logout:hover{background:var(--sell);color:#0d1117}
+footer{background:var(--card);border-top:1px solid var(--border);padding:1.1rem 1.5rem;margin-top:2.5rem}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/"><i class="bi bi-graph-up-arrow"></i> Trade<span>AI</span></a>
+    <div class="d-flex gap-1 flex-wrap">
+      <a class="nav-link" href="/">Dashboard</a>
+      <a class="nav-link" href="/watchlist">Watchlist</a>
+      <a class="nav-link" href="/signals">Signals</a>
+      <a class="nav-link" href="/history">History</a>
+      <a class="nav-link" href="/portfolio">Portfolio</a>
+    </div>
+    <div id="market-status"></div>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <span class="live-dot"></span><span style="color:var(--buy);font-weight:600;font-size:.82rem">LIVE</span>
+    <a href="/auth/logout" class="btn-logout ms-2"><i class="bi bi-box-arrow-right"></i> Logout</a>
+  </div>
+</nav>
+
+<div class="container-fluid px-3 py-4" style="max-width:900px">
+  <!-- Profile header -->
+  <div class="d-flex align-items-center gap-4 mb-4 flex-wrap">
+    <div class="avatar-lg" id="profile-avatar" style="background:#1D9E75">?</div>
+    <div>
+      <h1 class="fs-4 fw-bold mb-0" id="profile-name">Loading…</h1>
+      <div style="color:var(--muted);font-size:.85rem" id="profile-email"></div>
+      <div style="color:var(--muted);font-size:.78rem;margin-top:.2rem" id="profile-since"></div>
+    </div>
+    <div class="ms-auto">
+      <a href="/auth/logout" class="btn-logout"><i class="bi bi-box-arrow-right"></i>Logout</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-2 mb-4">
+    <div class="col-4"><div class="stat-card"><div class="stat-label">Paper Trades</div><div class="stat-val" id="prof-total" style="color:var(--blue)">—</div></div></div>
+    <div class="col-4"><div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-val" id="prof-wr" style="color:var(--buy)">—</div></div></div>
+    <div class="col-4"><div class="stat-card"><div class="stat-label">Best P&L</div><div class="stat-val" id="prof-best" style="color:var(--hold)">—</div></div></div>
+  </div>
+
+  <!-- Recent trades -->
+  <div style="font-size:.9rem;font-weight:600;margin-bottom:.45rem">Recent Trades <span style="font-size:.72rem;color:var(--muted);font-weight:400">(last 10)</span></div>
+  <div class="t-wrap" style="overflow-x:auto">
+    <table class="table table-dark mb-0" style="--bs-table-bg:transparent;--bs-table-border-color:#1c2230;min-width:650px">
+      <thead><tr><th>Symbol</th><th>Signal</th><th>Entry</th><th>Target</th><th>SL</th><th>Qty</th><th>P&L</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody id="prof-trades"><tr><td colspan="9" class="text-center text-muted py-3">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <div style="max-width:900px;margin:0 auto">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div><div style="font-weight:700;font-size:.9rem"><i class="bi bi-graph-up-arrow me-1"></i>TradeAI</div><div style="font-size:.72rem;color:var(--muted)">CNN-Based Stock Signal Platform</div></div>
+      <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem"><a href="/" style="color:var(--muted);text-decoration:none">Dashboard</a><a href="/signals" style="color:var(--muted);text-decoration:none">Signals</a><a href="/portfolio" style="color:var(--muted);text-decoration:none">Portfolio</a><a href="/about" style="color:var(--muted);text-decoration:none">About</a></div>
+      <div style="font-size:.72rem;color:var(--sell);font-weight:600">For Educational Use Only · Not SEBI Registered</div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const fmt=n=>typeof n==='number'?n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}):n;
+const badge=a=>`<span class="b-${a.toLowerCase()}">${a}</span>`;
+
+function updateMarketStatus(){
+  const el=document.getElementById('market-status');if(!el)return;
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const m=now.getHours()*60+now.getMinutes();
+  if(m>=9*60+15&&m<15*60+30) el.innerHTML='<span style="background:rgba(0,217,100,.1);color:#00d964;border:1px solid rgba(0,217,100,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">● Market Open</span>';
+  else if(m>=9*60&&m<9*60+15) el.innerHTML='<span style="background:rgba(255,165,2,.1);color:#ffa502;border:1px solid rgba(255,165,2,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">◐ Pre-Market</span>';
+  else el.innerHTML='<span style="background:rgba(255,71,87,.1);color:#ff4757;border:1px solid rgba(255,71,87,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">● Market Closed</span>';
+}
+updateMarketStatus();setInterval(updateMarketStatus,30000);
+
+async function loadProfile(){
+  try{
+    const [ur,tr]=await Promise.all([fetch('/data/user/info'),fetch('/data/user/trades')]);
+    const u=await ur.json();const t=await tr.json();
+    if(!u.logged_in){location.href='/login';return;}
+    document.getElementById('profile-avatar').textContent=u.user_name.charAt(0).toUpperCase();
+    document.getElementById('profile-avatar').style.background=u.user_color||'#1D9E75';
+    document.getElementById('profile-name').textContent=u.user_name;
+    document.getElementById('profile-email').textContent=u.user_email||'';
+    document.getElementById('profile-since').textContent='Member of TradeAI';
+    document.getElementById('prof-total').textContent=t.total;
+    document.getElementById('prof-wr').textContent=t.win_rate+'%';
+    const bp=t.best_pnl||0;
+    document.getElementById('prof-best').innerHTML=`<span style="color:${bp>=0?'var(--buy)':'var(--sell)'}">${bp>=0?'+':''}₹${fmt(bp)}</span>`;
+    const trades=t.trades;
+    document.getElementById('prof-trades').innerHTML=trades.length?trades.map(tr=>{
+      const pnlCl=tr.pnl>=0?'var(--buy)':'var(--sell)';
+      const stCl=tr.status==='Active'?'var(--blue)':tr.status==='Target Hit'?'var(--buy)':'var(--sell)';
+      return`<tr>
+        <td><strong>${tr.symbol}</strong></td>
+        <td>${badge(tr.signal_type)}</td>
+        <td>₹${fmt(tr.entry_price)}</td>
+        <td style="color:var(--buy)">₹${fmt(tr.target_price)}</td>
+        <td style="color:var(--sell)">₹${fmt(tr.sl_price)}</td>
+        <td>${tr.quantity}</td>
+        <td style="color:${pnlCl};font-weight:600">${tr.pnl>=0?'+':''}₹${fmt(tr.pnl)}</td>
+        <td style="font-size:.74rem;color:${stCl};font-weight:600">${tr.status}</td>
+        <td style="font-size:.72rem;color:var(--muted)">${(tr.entry_time||'').split(' ')[0]||'—'}</td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="9" class="text-center text-muted py-3">No trades placed yet. <a href="/signals" style="color:var(--blue)">Go to Signals →</a></td></tr>';
+  }catch(e){console.error(e);}
+}
+loadProfile();
+</script>
+</body>
+</html>

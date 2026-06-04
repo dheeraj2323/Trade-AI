@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>TradeAI — Login</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #0f0f0f;
+      --card:    #1a1a2e;
+      --border:  #2a2a4a;
+      --txt:     #e8eaf0;
+      --muted:   #8b949e;
+      --accent:  #00d4ff;
+      --accent2: #0099cc;
+      --error:   #ff4d6d;
+      --inp:     #0d1117;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background-image:
+        radial-gradient(ellipse at 15% 55%, rgba(0,212,255,.07) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(0,153,204,.05) 0%, transparent 55%);
+    }
+
+    /* ── Brand ── */
+    .brand { text-align: center; margin-bottom: 1.75rem; }
+    .brand-icon {
+      width: 58px; height: 58px;
+      background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(0,212,255,.28));
+      border: 1.5px solid rgba(0,212,255,.38);
+      border-radius: 15px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.65rem; color: var(--accent);
+      margin-bottom: .7rem;
+      box-shadow: 0 0 22px rgba(0,212,255,.18);
+    }
+    .brand h1 { font-size: 1.85rem; font-weight: 800; color: #fff; letter-spacing: -.4px; }
+    .brand h1 span { color: var(--accent); }
+    .brand p { font-size: .78rem; color: var(--muted); margin-top: .2rem; letter-spacing: .04em; text-transform: uppercase; }
+
+    /* ── Card ── */
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.2rem 2rem;
+      width: 100%; max-width: 430px;
+      box-shadow: 0 28px 70px rgba(0,0,0,.55);
+    }
+    .auth-card h2 { font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 1.4rem; }
+
+    /* ── Inputs ── */
+    .form-label {
+      font-size: .72rem; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: .07em;
+      margin-bottom: .35rem; display: block;
+    }
+    .form-control {
+      background: var(--inp); border: 1px solid var(--border);
+      border-radius: 9px; color: var(--txt);
+      font-size: .9rem; padding: .65rem 1rem;
+      transition: border-color .18s, box-shadow .18s; width: 100%;
+    }
+    .form-control:focus {
+      background: var(--inp); border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,212,255,.13); color: var(--txt); outline: none;
+    }
+    .form-control::placeholder { color: #383860; }
+
+    /* password group */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap .form-control { padding-right: 2.8rem; }
+    .pwd-toggle {
+      position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1rem; padding: 0; line-height: 1;
+      transition: color .18s;
+    }
+    .pwd-toggle:hover { color: var(--accent); }
+
+    /* ── Button ── */
+    .btn-auth {
+      width: 100%;
+      background: linear-gradient(135deg, #00d4ff, #0099cc);
+      border: none; border-radius: 9px;
+      color: #000; font-weight: 700; font-size: .93rem;
+      padding: .75rem; cursor: pointer;
+      transition: opacity .18s, transform .14s, box-shadow .18s;
+      letter-spacing: .02em; margin-top: .5rem;
+    }
+    .btn-auth:hover {
+      opacity: .88; transform: translateY(-1px);
+      box-shadow: 0 10px 28px rgba(0,212,255,.32);
+    }
+    .btn-auth:active { transform: translateY(0); }
+
+    /* ── Links ── */
+    .link-accent { color: var(--accent); text-decoration: none; font-weight: 600; transition: opacity .18s; }
+    .link-accent:hover { opacity: .75; text-decoration: underline; }
+    .link-muted  { color: var(--muted); text-decoration: none; font-size: .8rem; transition: color .18s; }
+    .link-muted:hover { color: var(--txt); }
+
+    /* ── Error ── */
+    .error-box {
+      background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.32);
+      border-radius: 9px; padding: .6rem .95rem;
+      font-size: .84rem; color: var(--error);
+      display: flex; align-items: center; gap: .45rem;
+      margin-bottom: 1.1rem;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex; align-items: center; gap: .7rem;
+      color: var(--muted); font-size: .74rem; margin: 1.2rem 0;
+    }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      margin-top: 1.8rem; font-size: .68rem; color: #3a3a5a;
+      text-align: center; max-width: 430px; line-height: 1.6;
+    }
+    .disclaimer strong { color: #55557a; }
+
+    .mb-f { margin-bottom: 1rem; }
+  </style>
+  <style>
+    [data-replit-watermark],
+    .replit-ui-theme-root,
+    iframe[src*="replit"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="brand">
+    <div class="brand-icon"><i class="bi bi-graph-up-arrow"></i></div>
+    <h1>Trade<span>AI</span></h1>
+    <p>CNN-Powered Stock Signal Platform</p>
+  </div>
+
+  <div class="auth-card">
+    <h2>Sign in to your account</h2>
+
+    {% if success %}
+    <div class="error-box" style="background:rgba(29,158,117,.12);border-color:rgba(29,158,117,.4);color:#1D9E75"><i class="bi bi-check-circle-fill"></i> {{ success }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="error-box"><i class="bi bi-exclamation-circle-fill"></i> {{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/auth/login" autocomplete="on">
+      <div class="mb-f">
+        <label class="form-label" for="email">Email address</label>
+        <input type="email" class="form-control" id="email" name="email"
+               placeholder="you@example.com" required autocomplete="email"/>
+      </div>
+
+      <div class="mb-f">
+        <div class="d-flex justify-content-between align-items-center" style="margin-bottom:.35rem">
+          <label class="form-label mb-0" for="password">Password</label>
+          <a href="#" class="link-muted">Forgot password?</a>
+        </div>
+        <div class="pwd-wrap">
+          <input type="password" class="form-control" id="password" name="password"
+                 placeholder="Enter your password" required autocomplete="current-password"/>
+          <button type="button" class="pwd-toggle" onclick="togglePwd('password','eye1')" tabindex="-1">
+            <i class="bi bi-eye" id="eye1"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-auth">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+      </button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <p style="text-align:center;font-size:.88rem;color:var(--muted)">
+      Don't have an account? <a href="/signup" class="link-accent">Sign Up</a>
+    </p>
+  </div>
+
+  <div class="disclaimer">
+    <i class="bi bi-shield-check"></i>
+    <strong>SEBI Disclaimer:</strong> TradeAI provides AI-generated signals for educational and
+    informational purposes only. These are not investment recommendations. Investments in securities
+    markets are subject to market risks. Please read all related documents carefully before investing.
+    Past performance is not indicative of future results.
+  </div>
+
+  <script>
+    function togglePwd(inputId, iconId) {
+      const inp = document.getElementById(inputId);
+      const ico = document.getElementById(iconId);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    }
+  </script>
+</body>
+</html>

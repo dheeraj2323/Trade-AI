@@ -482,13 +482,16 @@ def portfolio_page():
 def about_page():
     return render_template("about.html")
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["GET"])
 def login_page():
-    return render_template("login.html")
+    return render_template("login.html",
+                           error=request.args.get("error", ""),
+                           success=request.args.get("success", ""))
 
-@app.route("/signup", methods=["GET", "POST"])
+@app.route("/signup", methods=["GET"])
 def signup_page():
-    return render_template("signup.html")
+    return render_template("signup.html",
+                           error=request.args.get("error", ""))
 
 @app.route("/profile")
 def profile_page():
@@ -788,11 +791,13 @@ _init_watchlist_table()
 
 @app.route("/watchlist/add", methods=["POST"])
 def watchlist_add():
+    if "user_id" not in session:
+        return jsonify({"status": "error", "msg": "Please login to add stocks to your watchlist"}), 401
     try:
         from pysqlite3 import dbapi2 as _sq3
     except ImportError:
         import sqlite3 as _sq3
-    uid = session.get("user_id", "guest")
+    uid = session["user_id"]
     symbol = (request.json or {}).get("symbol", "").upper()
     if symbol in STOCKS:
         conn = _sq3.connect(DB_PATH)
@@ -919,6 +924,26 @@ def setup_db():
         symbol TEXT NOT NULL,
         added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, symbol))''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS signals_cache (
+        symbol TEXT, timeframe TEXT, signal TEXT,
+        pattern TEXT, entry REAL, target REAL,
+        stoploss REAL, confidence REAL, strength TEXT,
+        generated_at TIMESTAMP,
+        PRIMARY KEY (symbol, timeframe))''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS signal_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT, timeframe TEXT, signal TEXT,
+        pattern TEXT, entry REAL, target REAL,
+        stoploss REAL, confidence REAL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        outcome TEXT DEFAULT "Pending")''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS paper_trades (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT, symbol TEXT, action TEXT,
+        quantity INTEGER, entry_price REAL,
+        target REAL, stoploss REAL, pnl REAL DEFAULT 0,
+        status TEXT DEFAULT "Active",
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     pw = hashlib.sha256("demo123".encode()).hexdigest()
     try:
         conn.execute("INSERT INTO users (username,email,password_hash,avatar_color) VALUES (?,?,?,?)",

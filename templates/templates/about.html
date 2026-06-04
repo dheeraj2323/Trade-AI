@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TradeAI — About</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--txt:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--buy:#00d964;--sell:#ff4757;--hold:#ffa502}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;margin:0}
+.navbar{background:var(--card);border-bottom:1px solid var(--border);padding:.55rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.navbar-brand{font-weight:700;font-size:1.15rem;color:var(--txt)!important;text-decoration:none}.navbar-brand span{color:var(--blue)}
+.nav-link{color:var(--muted)!important;font-size:.88rem;text-decoration:none;padding:.3rem .6rem;border-radius:6px;transition:all .15s}
+.nav-link:hover,.nav-link.active{color:var(--txt)!important;background:#1c2230}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--buy);display:inline-block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.card-dark{background:var(--card);border:1px solid var(--border);border-radius:12px}
+.section-title{font-size:1.05rem;font-weight:700;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
+.tech-badge{background:#1c2230;border:1px solid var(--border);border-radius:6px;padding:.3rem .7rem;font-size:.82rem;color:var(--txt);display:inline-block;margin:.2rem}
+.disclaimer-box{background:#1a0a0a;border:2px solid var(--sell);border-radius:10px;padding:1.5rem}
+.disclaimer-title{font-size:1rem;font-weight:700;color:var(--sell);margin-bottom:.75rem}
+footer{background:var(--card);border-top:1px solid var(--border);padding:1.1rem 1.5rem;margin-top:2.5rem}
+</style>
+  <style>
+    [data-replit-watermark],
+    .replit-ui-theme-root,
+    iframe[src*="replit"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/"><i class="bi bi-graph-up-arrow"></i> Trade<span>AI</span></a>
+    <div class="d-flex gap-1 flex-wrap">
+      <a class="nav-link" href="/">Dashboard</a>
+      <a class="nav-link" href="/watchlist">Watchlist</a>
+      <a class="nav-link" href="/signals">Signals</a>
+      <a class="nav-link" href="/history">History</a>
+      <a class="nav-link" href="/portfolio">Portfolio</a>
+      <a class="nav-link active" href="/about">About</a>
+    </div>
+    <div id="market-status"></div>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <span class="live-dot"></span><span style="color:var(--buy);font-weight:600;font-size:.82rem">LIVE</span>
+  </div>
+</nav>
+
+<div class="container py-4" style="max-width:860px">
+
+  <!-- Hero -->
+  <div class="text-center mb-4">
+    <div style="font-size:3rem;margin-bottom:.5rem">📈</div>
+    <h1 class="fw-bold mb-1">TradeAI</h1>
+    <p style="color:var(--muted)">CNN-Based Candlestick Pattern Recognition for Indian Equity Markets</p>
+    <span style="background:#0a2216;color:var(--buy);border:1px solid var(--buy);border-radius:6px;padding:.25rem .8rem;font-size:.8rem;font-weight:600">Academic Project · CSE 2026</span>
+  </div>
+
+  <!-- How it works -->
+  <div class="card-dark p-4 mb-3">
+    <div class="section-title"><i class="bi bi-cpu" style="color:var(--blue)"></i> How CNN Pattern Recognition Works</div>
+    <p style="font-size:.88rem;color:var(--muted);line-height:1.65">TradeAI uses a Convolutional Neural Network (CNN) trained on over 10,000 candlestick chart images to detect technical patterns in real-time market data. The model converts OHLCV price data into visual chart representations and classifies them into 19 known candlestick patterns.</p>
+    <div class="row g-3 mt-1">
+      <div class="col-md-4">
+        <div style="background:#0d1117;border-radius:8px;padding:.9rem;border:1px solid var(--border)">
+          <div style="font-size:1.4rem;margin-bottom:.35rem">1️⃣</div>
+          <div style="font-weight:600;font-size:.85rem;margin-bottom:.3rem">OHLCV Ingestion</div>
+          <div style="font-size:.78rem;color:var(--muted)">Open, High, Low, Close, Volume data fetched for 6 timeframes (1m to 1W)</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div style="background:#0d1117;border-radius:8px;padding:.9rem;border:1px solid var(--border)">
+          <div style="font-size:1.4rem;margin-bottom:.35rem">2️⃣</div>
+          <div style="font-weight:600;font-size:.85rem;margin-bottom:.3rem">Chart Rendering</div>
+          <div style="font-size:.78rem;color:var(--muted)">Last 20 candles rendered as 224×224px image using matplotlib with dark theme</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div style="background:#0d1117;border-radius:8px;padding:.9rem;border:1px solid var(--border)">
+          <div style="font-size:1.4rem;margin-bottom:.35rem">3️⃣</div>
+          <div style="font-weight:600;font-size:.85rem;margin-bottom:.3rem">CNN Classification</div>
+          <div style="font-size:.78rem;color:var(--muted)">MobileNetV2 classifies pattern → BUY/SELL/HOLD signal with confidence score</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tech stack -->
+  <div class="card-dark p-4 mb-3">
+    <div class="section-title"><i class="bi bi-stack" style="color:var(--hold)"></i> Technology Stack</div>
+    <div>
+      <span class="tech-badge"><i class="bi bi-filetype-py me-1" style="color:var(--blue)"></i>Python 3.11</span>
+      <span class="tech-badge"><i class="bi bi-server me-1" style="color:var(--buy)"></i>Flask</span>
+      <span class="tech-badge">🤖 TensorFlow 2.x</span>
+      <span class="tech-badge">📱 MobileNetV2</span>
+      <span class="tech-badge"><i class="bi bi-database me-1" style="color:var(--hold)"></i>SQLite</span>
+      <span class="tech-badge">📊 Chart.js</span>
+      <span class="tech-badge">🕯️ Lightweight Charts</span>
+      <span class="tech-badge">🅱️ Bootstrap 5</span>
+      <span class="tech-badge">📈 NSE Market Data</span>
+    </div>
+    <div class="mt-3" style="font-size:.82rem;color:var(--muted)">
+      <strong style="color:var(--txt)">Model:</strong> MobileNetV2 pre-trained on ImageNet, fine-tuned on 10,000+ candlestick chart images across 19 pattern classes. Input: 224×224 RGB image. Output: pattern class + confidence score. Multi-timeframe consensus combines 6 independent CNN inferences.
+    </div>
+  </div>
+
+  <!-- SEBI Disclaimer -->
+  <div class="disclaimer-box mb-3">
+    <div class="disclaimer-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>IMPORTANT DISCLAIMER</div>
+    <p style="font-size:.88rem;line-height:1.7;color:#e6edf3;margin-bottom:.75rem">
+      <strong>TradeAI is an academic research project developed for educational purposes only.</strong> All signals generated are AI predictions based on technical pattern analysis and do <strong>NOT</strong> constitute financial advice.
+    </p>
+    <ul style="font-size:.85rem;line-height:1.8;color:var(--muted);margin-bottom:.75rem">
+      <li>TradeAI is <strong style="color:var(--sell)">NOT a SEBI registered investment advisor</strong></li>
+      <li>Do not make real investment decisions based on these signals</li>
+      <li>Always consult a SEBI registered financial advisor before investing</li>
+      <li>Past performance of AI signals does not guarantee future results</li>
+      <li>All displayed prices and signals are simulated/mock data for demonstration</li>
+    </ul>
+    <div style="font-size:.78rem;color:var(--sell);font-weight:600;padding:.5rem .75rem;background:rgba(255,71,87,.08);border-radius:6px;border:1px solid rgba(255,71,87,.3)">
+      This platform uses paper/virtual trading only. No real money is involved. For educational and research purposes exclusively.
+    </div>
+  </div>
+
+  <!-- Academic credit -->
+  <div class="card-dark p-4 text-center">
+    <div style="font-size:.85rem;color:var(--muted)">Academic Project</div>
+    <div style="font-weight:700;font-size:1.05rem;margin:.3rem 0">B.Tech Computer Science &amp; Engineering — 2026</div>
+    <div style="font-size:.82rem;color:var(--muted)">Final Year Project · Deep Learning for Financial Market Analysis</div>
+    <div style="font-size:.78rem;color:var(--blue);margin-top:.5rem">Research Area: CNN-based Pattern Recognition in Financial Time Series</div>
+  </div>
+
+</div>
+
+<footer>
+  <div style="max-width:1350px;margin:0 auto">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div><div style="font-weight:700;font-size:.9rem"><i class="bi bi-graph-up-arrow me-1"></i>TradeAI</div><div style="font-size:.72rem;color:var(--muted)">CNN-Based Stock Signal Platform</div></div>
+      <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem"><a href="/" style="color:var(--muted);text-decoration:none">Dashboard</a><a href="/watchlist" style="color:var(--muted);text-decoration:none">Watchlist</a><a href="/signals" style="color:var(--muted);text-decoration:none">Signals</a><a href="/history" style="color:var(--muted);text-decoration:none">History</a><a href="/portfolio" style="color:var(--muted);text-decoration:none">Portfolio</a><a href="/about" style="color:var(--muted);text-decoration:none">About</a></div>
+      <div style="font-size:.72rem;color:var(--sell);font-weight:600">For Educational Use Only · Not SEBI Registered</div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:.8rem;padding-top:.6rem;font-size:.67rem;color:var(--muted)">DISCLAIMER: TradeAI is an academic research project for educational purposes only. All signals are AI predictions and do NOT constitute financial advice. Not SEBI registered.</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function updateMarketStatus(){
+  const el=document.getElementById('market-status');if(!el)return;
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const m=now.getHours()*60+now.getMinutes();
+  let html;
+  if(m>=9*60+15&&m<15*60+30) html='<span style="background:rgba(0,217,100,.1);color:#00d964;border:1px solid rgba(0,217,100,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">● Market Open</span>';
+  else if(m>=9*60&&m<9*60+15) html='<span style="background:rgba(255,165,2,.1);color:#ffa502;border:1px solid rgba(255,165,2,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">◐ Pre-Market</span>';
+  else html='<span style="background:rgba(255,71,87,.1);color:#ff4757;border:1px solid rgba(255,71,87,.3);border-radius:5px;padding:.15rem .55rem;font-size:.72rem;font-weight:600">● Market Closed</span>';
+  el.innerHTML=html;
+}
+updateMarketStatus();setInterval(updateMarketStatus,30000);
+</script>
+</body>
+</html>

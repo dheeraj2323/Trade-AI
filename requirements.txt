@@ -12,3 +12,4 @@ matplotlib==3.9.2
 APScheduler==3.10.4
 requests==2.32.3
 gunicorn==22.0.0
+pysqlite3-binary==0.5.3
