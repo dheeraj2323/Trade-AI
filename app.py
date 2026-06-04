@@ -470,7 +470,7 @@ def signals_page():
 def watchlist_page():
     return render_template("watchlist.html")
 
-@app.route("/history")
+@app.route("/history-disabled")
 def history_page():
     return render_template("history.html")
 
