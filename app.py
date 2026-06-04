@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, session, redirect
+from flask import url_for, Flask, jsonify, render_template, request, session, redirect
 from flask_cors import CORS
 from functools import wraps
 import random
@@ -770,7 +770,7 @@ def api_user_trades():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect("/login")
 
 # -- user_watchlist DB table init --
 def _init_watchlist_table():
@@ -1104,3 +1104,98 @@ def fix_paper_trades():
     trades = conn.execute("SELECT COUNT(*) FROM paper_trades").fetchone()[0]
     conn.close()
     return f"Fixed! History: {hist} signals | Portfolio: {trades} trades"
+
+@app.route("/admin/rebuild-db")
+def rebuild_db():
+    import sqlite3, hashlib, random, datetime
+    conn = sqlite3.connect(DB_PATH)
+
+    # Drop all and recreate with EXACT schema app.py expects
+    conn.execute("DROP TABLE IF EXISTS paper_trades")
+    conn.execute("DROP TABLE IF EXISTS signal_history")
+    conn.execute("DROP TABLE IF EXISTS signals")
+    conn.execute("DROP TABLE IF EXISTS users")
+
+    conn.execute('''CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        avatar_color TEXT DEFAULT "#1D9E75",
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+
+    conn.execute('''CREATE TABLE signal_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT, timeframe TEXT, signal_type TEXT,
+        entry REAL, target REAL, sl REAL,
+        pattern TEXT, confidence REAL,
+        timestamp TEXT, status TEXT DEFAULT "Pending",
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+
+    conn.execute('''CREATE TABLE paper_trades (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT, signal_type TEXT,
+        entry_price REAL, target_price REAL, sl_price REAL,
+        quantity INTEGER, invested_amount REAL,
+        pattern TEXT, timeframe TEXT, confidence REAL,
+        status TEXT DEFAULT "Active",
+        pnl REAL DEFAULT 0,
+        entry_time TEXT,
+        exit_time TEXT,
+        exit_price REAL)''')
+
+    # Create demo user
+    pw = hashlib.sha256("demo123".encode()).hexdigest()
+    conn.execute("INSERT INTO users (username,email,password_hash,avatar_color) VALUES (?,?,?,?)",
+                 ("demo","demo@tradeai.com",pw,"#1D9E75"))
+
+    # Seed signal history
+    stocks = ["RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK",
+              "WIPRO","SBIN","AXISBANK","LT","MARUTI",
+              "BAJFINANCE","TITAN","SUNPHARMA","NESTLEIND","TECHM"]
+    patterns = ["Hammer","Bullish Engulfing","Morning Star",
+                "Shooting Star","Bearish Engulfing","Doji",
+                "Three White Soldiers","Dark Cloud Cover"]
+    sigs = ["BUY","BUY","BUY","SELL","SELL","HOLD"]
+    outcomes = ["WIN","WIN","LOSS","WIN","Pending","WIN","LOSS"]
+
+    for i in range(30):
+        sym = random.choice(stocks)
+        sig = random.choice(sigs)
+        pat = random.choice(patterns)
+        price = round(random.uniform(500, 3000), 2)
+        target = round(price*1.03, 2) if sig=="BUY" else round(price*0.97, 2)
+        sl = round(price*0.98, 2) if sig=="BUY" else round(price*1.02, 2)
+        conf = round(random.uniform(70, 95), 1)
+        days_ago = random.randint(1, 30)
+        ts = (datetime.datetime.now() - datetime.timedelta(days=days_ago)).strftime("%Y-%m-%d %H:%M:%S")
+        status = random.choice(outcomes)
+        conn.execute('''INSERT INTO signal_history
+            (symbol,timeframe,signal_type,entry,target,sl,pattern,confidence,timestamp,status)
+            VALUES (?,?,?,?,?,?,?,?,?,?)''',
+            (sym,"1D",sig,price,target,sl,pat,conf,ts,status))
+
+    # Seed paper trades
+    trades = [
+        ("RELIANCE","BUY",2870,2957,2813,10,"Bullish Engulfing",82.5,"Exited"),
+        ("TCS","BUY",3890,4007,3812,5,"Hammer",78.3,"Exited"),
+        ("HDFCBANK","SELL",1680,1630,1714,8,"Bearish Engulfing",91.2,"Active"),
+        ("INFY","BUY",1560,1607,1529,15,"Morning Star",75.8,"Exited"),
+        ("ICICIBANK","BUY",1120,1154,1098,20,"Three White Soldiers",88.9,"Exited"),
+    ]
+    for sym,sig,entry,target,sl,qty,pat,conf,status in trades:
+        invested = round(entry*qty, 2)
+        pnl = round((target-entry)*qty if status=="Exited" and sig=="BUY" else 0, 2)
+        ts = (datetime.datetime.now() - datetime.timedelta(days=random.randint(1,15))).strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute('''INSERT INTO paper_trades
+            (symbol,signal_type,entry_price,target_price,sl_price,
+             quantity,invested_amount,pattern,timeframe,confidence,status,pnl,entry_time)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+            (sym,sig,entry,target,sl,qty,invested,pat,"1D",conf,status,pnl,ts))
+
+    conn.commit()
+    users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    hist = conn.execute("SELECT COUNT(*) FROM signal_history").fetchone()[0]
+    trades_count = conn.execute("SELECT COUNT(*) FROM paper_trades").fetchone()[0]
+    conn.close()
+    return f"Rebuild complete! Users:{users} History:{hist} Trades:{trades_count}"
