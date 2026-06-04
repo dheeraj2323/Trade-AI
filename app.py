@@ -953,3 +953,77 @@ def setup_db():
     count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
     conn.close()
     return f"DB setup complete! Total users: {count}"
+
+@app.route("/admin/seed-demo-data")
+def seed_demo_data():
+    import sqlite3, hashlib, random, datetime
+    conn = sqlite3.connect(DB_PATH)
+    
+    # Create paper_trades table
+    conn.execute('''CREATE TABLE IF NOT EXISTS paper_trades (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT, symbol TEXT, action TEXT,
+        quantity INTEGER, entry_price REAL,
+        target REAL, stoploss REAL, pnl REAL DEFAULT 0,
+        status TEXT DEFAULT "Active",
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+
+    # Create signal_history table
+    conn.execute('''CREATE TABLE IF NOT EXISTS signal_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol TEXT, timeframe TEXT, signal TEXT,
+        pattern TEXT, entry REAL, target REAL,
+        stoploss REAL, confidence REAL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        outcome TEXT DEFAULT "Pending")''')
+
+    # Seed signal history
+    stocks = ["RELIANCE","TCS","HDFCBANK","INFY","ICICIBANK",
+              "WIPRO","SBIN","AXISBANK","LT","MARUTI",
+              "BAJFINANCE","TITAN","SUNPHARMA","NESTLEIND","TECHM"]
+    patterns = ["Hammer","Bullish Engulfing","Morning Star",
+                "Shooting Star","Bearish Engulfing","Doji"]
+    signals = ["BUY","BUY","BUY","SELL","SELL","HOLD"]
+    outcomes = ["WIN","WIN","LOSS","WIN","PENDING","WIN","LOSS"]
+
+    for i in range(30):
+        sym = random.choice(stocks)
+        sig = random.choice(signals)
+        pat = random.choice(patterns)
+        price = round(random.uniform(500, 3000), 2)
+        target = round(price * 1.03, 2) if sig == "BUY" else round(price * 0.97, 2)
+        sl = round(price * 0.98, 2) if sig == "BUY" else round(price * 1.02, 2)
+        conf = round(random.uniform(70, 95), 1)
+        days_ago = random.randint(1, 30)
+        date = (datetime.datetime.now() - datetime.timedelta(days=days_ago)).strftime("%Y-%m-%d %H:%M:%S")
+        outcome = random.choice(outcomes)
+        try:
+            conn.execute('''INSERT INTO signal_history 
+                (symbol,timeframe,signal,pattern,entry,target,stoploss,confidence,created_at,outcome)
+                VALUES (?,?,?,?,?,?,?,?,?,?)''',
+                (sym,"1D",sig,pat,price,target,sl,conf,date,outcome))
+        except: pass
+
+    # Seed paper trades for demo user
+    demo_trades = [
+        ("RELIANCE","BUY",10,2870,2957,2813,"WIN"),
+        ("TCS","BUY",5,3890,4007,3812,"WIN"),
+        ("HDFCBANK","SELL",8,1680,1630,1714,"PENDING"),
+        ("INFY","BUY",15,1560,1607,1529,"LOSS"),
+        ("ICICIBANK","BUY",20,1120,1154,1098,"WIN"),
+    ]
+    for sym,action,qty,entry,target,sl,outcome in demo_trades:
+        pnl = round((target-entry)*qty if outcome=="WIN" else (sl-entry)*qty, 2)
+        status = "Closed" if outcome != "PENDING" else "Active"
+        try:
+            conn.execute('''INSERT INTO paper_trades
+                (user_id,symbol,action,quantity,entry_price,target,stoploss,pnl,status)
+                VALUES (?,?,?,?,?,?,?,?,?)''',
+                ("1",sym,action,qty,entry,target,sl,pnl,status))
+        except: pass
+
+    conn.commit()
+    hist_count = conn.execute("SELECT COUNT(*) FROM signal_history").fetchone()[0]
+    trade_count = conn.execute("SELECT COUNT(*) FROM paper_trades").fetchone()[0]
+    conn.close()
+    return f"Demo data seeded! History: {hist_count} signals | Portfolio: {trade_count} trades"
